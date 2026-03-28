@@ -1,6 +1,13 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-initialised client - avoids crashing during build when env var is absent
+let _resend: Resend | null = null;
+export function getResend() {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 // Available "from" addresses - any address on a verified Resend domain works
 export const FROM_ADDRESSES = [
