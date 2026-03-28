@@ -5,28 +5,26 @@ import { useRef } from "react";
 export default function BulkActions({
   children,
   entityType,
-  extraActions,
 }: {
   children: React.ReactNode;
   entityType: string;
-  extraActions?: React.ReactNode;
 }) {
-  const formRef = useRef<HTMLFormElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   function getSelectedIds(): number[] {
-    if (!formRef.current) return [];
-    const checkboxes = formRef.current.querySelectorAll<HTMLInputElement>(
+    if (!containerRef.current) return [];
+    const checkboxes = containerRef.current.querySelectorAll<HTMLInputElement>(
       'input[name="ids"]:checked'
     );
     return Array.from(checkboxes).map((cb) => parseInt(cb.value));
   }
 
-  function handleSelectAll(e: React.ChangeEvent<HTMLInputElement>) {
-    if (!formRef.current) return;
-    const checkboxes = formRef.current.querySelectorAll<HTMLInputElement>(
+  function handleSelectAll(checked: boolean) {
+    if (!containerRef.current) return;
+    const checkboxes = containerRef.current.querySelectorAll<HTMLInputElement>(
       'input[name="ids"]'
     );
-    checkboxes.forEach((cb) => (cb.checked = e.target.checked));
+    checkboxes.forEach((cb) => (cb.checked = checked));
   }
 
   async function handleBulkDelete() {
@@ -41,7 +39,7 @@ export default function BulkActions({
     if (res.ok) window.location.reload();
   }
 
-  async function handleBulkAction(action: string, data?: Record<string, unknown>) {
+  async function handleBulkAction(data: Record<string, unknown>) {
     const ids = getSelectedIds();
     if (ids.length === 0) return;
     const res = await fetch(`/api/bulk/${entityType}`, {
@@ -53,7 +51,7 @@ export default function BulkActions({
   }
 
   return (
-    <form ref={formRef} onSubmit={(e) => e.preventDefault()}>
+    <div ref={containerRef}>
       <div className="flex gap-2 mb-3">
         <button
           type="button"
@@ -66,14 +64,14 @@ export default function BulkActions({
           <>
             <button
               type="button"
-              onClick={() => handleBulkAction("done", { done: true })}
+              onClick={() => handleBulkAction({ done: true })}
               className="border border-success text-success px-3 py-1 rounded-lg text-xs hover:bg-green-50 transition-colors"
             >
               Mark Done
             </button>
             <button
               type="button"
-              onClick={() => handleBulkAction("done", { done: false })}
+              onClick={() => handleBulkAction({ done: false })}
               className="border border-border text-muted px-3 py-1 rounded-lg text-xs hover:bg-gray-50 transition-colors"
             >
               Mark Pending
@@ -85,12 +83,12 @@ export default function BulkActions({
         onClick={(e) => {
           const target = e.target as HTMLInputElement;
           if (target.dataset.selectAll !== undefined) {
-            handleSelectAll({ target } as unknown as React.ChangeEvent<HTMLInputElement>);
+            handleSelectAll(target.checked);
           }
         }}
       >
         {children}
       </div>
-    </form>
+    </div>
   );
 }
