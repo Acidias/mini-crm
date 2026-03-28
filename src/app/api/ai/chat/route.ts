@@ -1,11 +1,31 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { auth } from "@/auth";
+import { db } from "@/db";
+import { chatSessions } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import { getSystemPrompt } from "@/lib/ai/system-prompt";
 import { allTools } from "@/lib/ai/tools";
 import { executeTool } from "@/lib/ai/tool-executor";
 
 const MAX_TOOL_CALLS = 40;
+
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+  toolCalls?: { id: string; name: string; input: unknown; result?: unknown }[];
+};
+
+async function saveSessionMessages(sessionId: number, messages: ChatMessage[]) {
+  try {
+    await db
+      .update(chatSessions)
+      .set({ messages, updatedAt: new Date() })
+      .where(eq(chatSessions.id, sessionId));
+  } catch {
+    // Non-critical - don't break the stream
+  }
+}
 
 export async function POST(req: NextRequest) {
   const session = await auth();
@@ -13,7 +33,7 @@ export async function POST(req: NextRequest) {
     return new Response(JSON.stringify({ error: "Unauthorised" }), { status: 401 });
   }
 
-  const { messages, apiKey } = await req.json();
+  const { messages, apiKey, sessionId } = await req.json();
   if (!apiKey) {
     return new Response(JSON.stringify({ error: "API key required" }), { status: 400 });
   }
@@ -23,12 +43,18 @@ export async function POST(req: NextRequest) {
 
   const stream = new ReadableStream({
     async start(controller) {
+      let clientDisconnected = false;
+
       function send(obj: object) {
-        controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+        if (clientDisconnected) return;
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(obj) + "\n"));
+        } catch {
+          clientDisconnected = true;
+        }
       }
 
       try {
-        // Build Anthropic messages from the simplified conversation
         const anthropicMessages: Anthropic.Messages.MessageParam[] = messages.map(
           (m: { role: string; content: string }) => ({
             role: m.role as "user" | "assistant",
@@ -37,6 +63,13 @@ export async function POST(req: NextRequest) {
         );
 
         let toolCallCount = 0;
+        let assistantText = "";
+        let allToolCalls: ChatMessage["toolCalls"] = [];
+
+        // For server-side save: build the full message list
+        const fullMessages: ChatMessage[] = messages.map(
+          (m: { role: string; content: string }) => ({ role: m.role, content: m.content })
+        );
 
         // Agentic loop
         while (true) {
@@ -48,34 +81,30 @@ export async function POST(req: NextRequest) {
             messages: anthropicMessages,
           });
 
-          // Stream text deltas to the client
           messageStream.on("text", (text) => {
+            assistantText += text;
             send({ type: "text", content: text });
           });
 
-          // Wait for the complete message
           const finalMessage = await messageStream.finalMessage();
 
-          // Check if there are tool use blocks
           const toolUseBlocks = finalMessage.content.filter(
             (block): block is Anthropic.Messages.ToolUseBlock => block.type === "tool_use"
           );
 
           if (finalMessage.stop_reason !== "tool_use" || toolUseBlocks.length === 0) {
-            // No more tool calls - we're done
             send({ type: "done" });
             break;
           }
 
-          // Safety: limit total tool calls
           toolCallCount += toolUseBlocks.length;
           if (toolCallCount > MAX_TOOL_CALLS) {
+            assistantText += "\n\n[Reached maximum tool call limit for this request]";
             send({ type: "text", content: "\n\n[Reached maximum tool call limit for this request]" });
             send({ type: "done" });
             break;
           }
 
-          // Execute each tool call
           const toolResults: Anthropic.Messages.ToolResultBlockParam[] = [];
 
           for (const toolBlock of toolUseBlocks) {
@@ -90,6 +119,13 @@ export async function POST(req: NextRequest) {
               toolBlock.name,
               toolBlock.input as Record<string, unknown>
             );
+
+            allToolCalls = [...(allToolCalls || []), {
+              id: toolBlock.id,
+              name: toolBlock.name,
+              input: toolBlock.input,
+              result,
+            }];
 
             send({
               type: "tool_result",
@@ -106,7 +142,15 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // Append the assistant message (with tool use blocks) and tool results
+          // Save progress after each tool round (server-side)
+          if (sessionId) {
+            const progressMessages: ChatMessage[] = [
+              ...fullMessages,
+              { role: "assistant", content: assistantText, toolCalls: allToolCalls },
+            ];
+            saveSessionMessages(sessionId, progressMessages);
+          }
+
           anthropicMessages.push({
             role: "assistant",
             content: finalMessage.content,
@@ -115,8 +159,15 @@ export async function POST(req: NextRequest) {
             role: "user",
             content: toolResults,
           });
+        }
 
-          // Loop back to let Claude process the tool results
+        // Final save with complete response
+        if (sessionId) {
+          const finalSave: ChatMessage[] = [
+            ...fullMessages,
+            { role: "assistant", content: assistantText, toolCalls: allToolCalls },
+          ];
+          await saveSessionMessages(sessionId, finalSave);
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
@@ -128,7 +179,9 @@ export async function POST(req: NextRequest) {
           send({ type: "error", message });
         }
       } finally {
-        controller.close();
+        if (!clientDisconnected) {
+          try { controller.close(); } catch { /* already closed */ }
+        }
       }
     },
   });

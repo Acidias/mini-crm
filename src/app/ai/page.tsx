@@ -91,6 +91,27 @@ export default function AIChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Reload session from DB when tab regains focus (picks up background server-side saves)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible" && activeSessionId && !isLoading) {
+        reloadCurrentSession(activeSessionId);
+      }
+    }
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [activeSessionId, isLoading]);
+
+  async function reloadCurrentSession(id: number) {
+    const res = await fetch(`/api/ai/sessions?get=${id}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.messages && Array.isArray(data.messages)) {
+        setMessages(data.messages);
+      }
+    }
+  }
+
   async function loadSessions() {
     const res = await fetch("/api/ai/sessions");
     if (res.ok) {
@@ -249,7 +270,7 @@ export default function AIChatPage() {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: conversation, apiKey }),
+        body: JSON.stringify({ messages: conversation, apiKey, sessionId }),
         signal: controller.signal,
       });
 
