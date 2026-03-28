@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, date, boolean } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, timestamp, date, boolean, index } from "drizzle-orm/pg-core";
 
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
@@ -26,7 +26,11 @@ export const persons = pgTable("persons", {
   lastContactedAt: timestamp("last_contacted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("persons_company_id_idx").on(table.companyId),
+  index("persons_email_idx").on(table.email),
+  index("persons_name_idx").on(table.name),
+]);
 
 export const events = pgTable("events", {
   id: serial("id").primaryKey(),
@@ -40,7 +44,10 @@ export const events = pgTable("events", {
   status: varchar("status", { length: 50 }).notNull().default("upcoming"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("events_company_id_idx").on(table.companyId),
+  index("events_date_idx").on(table.date),
+]);
 
 export const emails = pgTable("emails", {
   id: serial("id").primaryKey(),
@@ -56,7 +63,10 @@ export const emails = pgTable("emails", {
   }),
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("emails_person_id_idx").on(table.personId),
+  index("emails_created_at_idx").on(table.createdAt),
+]);
 
 export const todos = pgTable("todos", {
   id: serial("id").primaryKey(),
@@ -72,4 +82,25 @@ export const todos = pgTable("todos", {
   }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+}, (table) => [
+  index("todos_person_id_idx").on(table.personId),
+  index("todos_event_id_idx").on(table.eventId),
+  index("todos_done_idx").on(table.done),
+]);
+
+export const activities = pgTable("activities", {
+  id: serial("id").primaryKey(),
+  type: varchar("type", { length: 50 }).notNull(), // "call", "meeting", "note", "email", "other"
+  title: varchar("title", { length: 255 }).notNull(),
+  notes: text("notes"),
+  personId: integer("person_id").references(() => persons.id, {
+    onDelete: "cascade",
+  }),
+  companyId: integer("company_id").references(() => companies.id, {
+    onDelete: "cascade",
+  }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("activities_person_id_idx").on(table.personId),
+  index("activities_company_id_idx").on(table.companyId),
+]);
