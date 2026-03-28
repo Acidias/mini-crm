@@ -3,6 +3,29 @@ import type Anthropic from "@anthropic-ai/sdk";
 type Tool = Anthropic.Messages.Tool;
 
 export const allTools: Tool[] = [
+  // ─── WEB: Research ───
+  {
+    name: "web_fetch",
+    description: "Fetch a web page and return its text content. Use this to research people, companies, events from URLs. Works with any public webpage including LinkedIn, Companies House, company websites, event pages, directories, etc. Returns cleaned text extracted from the HTML.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        url: { type: "string", description: "The URL to fetch (required)" },
+      },
+      required: ["url"],
+    },
+  },
+  {
+    name: "web_search",
+    description: "Search the web using DuckDuckGo and return results. Use this to find LinkedIn profiles, company information, contact details, Companies House records, etc. Returns a list of search result titles, URLs, and snippets.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        query: { type: "string", description: "Search query (required)" },
+      },
+      required: ["query"],
+    },
+  },
   // ─── READ: Persons ───
   {
     name: "persons_list",

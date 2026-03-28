@@ -4,6 +4,7 @@ import {
 } from "@/db/schema";
 import { eq, ilike, or, and, isNull, desc, asc, gte, lt, count } from "drizzle-orm";
 import { getResend, FROM_ADDRESSES, DEFAULT_FROM } from "@/lib/resend";
+import * as cheerio from "cheerio";
 
 type ToolResult = { success: boolean; data?: unknown; error?: string };
 type Input = Record<string, unknown>;
@@ -13,9 +14,96 @@ function safeLimit(input: Input, defaultVal = 20): number {
   return Math.min(Math.max(v, 1), 50);
 }
 
+// ─── Web helpers ───
+
+async function fetchWebPage(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; MiniCRM/1.0)",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    },
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+  const html = await res.text();
+  const $ = cheerio.load(html);
+
+  // Remove scripts, styles, nav, footer, etc.
+  $("script, style, nav, footer, header, iframe, noscript, svg").remove();
+
+  // Extract text from body
+  const text = $("body").text()
+    .replace(/\s+/g, " ")
+    .replace(/\n\s*\n/g, "\n")
+    .trim();
+
+  // Truncate to avoid overwhelming Claude's context
+  return text.length > 15000 ? text.slice(0, 15000) + "\n\n[Content truncated at 15000 chars]" : text;
+}
+
+async function searchDuckDuckGo(query: string): Promise<{ title: string; url: string; snippet: string }[]> {
+  const encoded = encodeURIComponent(query);
+  const res = await fetch(`https://html.duckduckgo.com/html/?q=${encoded}`, {
+    headers: {
+      "User-Agent": "Mozilla/5.0 (compatible; MiniCRM/1.0)",
+      Accept: "text/html",
+    },
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!res.ok) throw new Error(`Search failed: HTTP ${res.status}`);
+  const html = await res.text();
+  const $ = cheerio.load(html);
+
+  const results: { title: string; url: string; snippet: string }[] = [];
+  $(".result").each((_, el) => {
+    const title = $(el).find(".result__title a").text().trim();
+    const href = $(el).find(".result__title a").attr("href") || "";
+    const snippet = $(el).find(".result__snippet").text().trim();
+
+    // DuckDuckGo wraps URLs in a redirect, extract the actual URL
+    let url = href;
+    try {
+      const parsed = new URL(href, "https://duckduckgo.com");
+      url = parsed.searchParams.get("uddg") || href;
+    } catch {
+      // Use href as-is
+    }
+
+    if (title && url) {
+      results.push({ title, url, snippet });
+    }
+  });
+
+  return results.slice(0, 10);
+}
+
 // ─── Tool Executor Map ───
 
 const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
+  // ─── WEB ───
+  async web_fetch(input) {
+    const url = input.url as string;
+    if (!url) return { success: false, error: "URL is required" };
+    try {
+      const text = await fetchWebPage(url);
+      return { success: true, data: { url, content: text, length: text.length } };
+    } catch (err) {
+      return { success: false, error: `Failed to fetch ${url}: ${err instanceof Error ? err.message : "Unknown error"}` };
+    }
+  },
+
+  async web_search(input) {
+    const query = input.query as string;
+    if (!query) return { success: false, error: "Query is required" };
+    try {
+      const results = await searchDuckDuckGo(query);
+      if (results.length === 0) return { success: true, data: { results: [], message: "No results found" } };
+      return { success: true, data: { query, results } };
+    } catch (err) {
+      return { success: false, error: `Search failed: ${err instanceof Error ? err.message : "Unknown error"}` };
+    }
+  },
+
   // ─── PERSONS ───
   async persons_list(input) {
     const query = input.query as string | undefined;

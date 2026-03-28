@@ -5,7 +5,7 @@ import { getSystemPrompt } from "@/lib/ai/system-prompt";
 import { allTools } from "@/lib/ai/tools";
 import { executeTool } from "@/lib/ai/tool-executor";
 
-const MAX_TOOL_CALLS = 20;
+const MAX_TOOL_CALLS = 40;
 
 export async function POST(req: NextRequest) {
   const session = await auth();

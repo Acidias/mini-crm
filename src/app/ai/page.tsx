@@ -23,6 +23,8 @@ type Session = {
 };
 
 const TOOL_LABELS: Record<string, string> = {
+  web_fetch: "Fetch Web Page",
+  web_search: "Web Search",
   persons_list: "Search Persons",
   persons_get: "Get Person",
   persons_create: "Create Person",
@@ -615,6 +617,34 @@ type Entity = {
 
 function extractEntities(toolName: string, data: unknown): Entity[] {
   if (!data) return [];
+
+  // Web tools
+  if (toolName === "web_fetch") {
+    const d = data as Record<string, unknown>;
+    if (d.url) {
+      return [{
+        type: "activity" as const,
+        id: 0,
+        label: String(d.url).replace(/^https?:\/\//, "").slice(0, 60),
+        subtitle: `${d.length || 0} chars fetched`,
+        href: d.url as string,
+      }];
+    }
+  }
+
+  if (toolName === "web_search") {
+    const d = data as Record<string, unknown>;
+    const results = d.results as { title: string; url: string; snippet: string }[] | undefined;
+    if (results && Array.isArray(results)) {
+      return results.slice(0, 8).map((r) => ({
+        type: "activity" as const,
+        id: 0,
+        label: r.title,
+        subtitle: r.snippet?.slice(0, 80) || r.url,
+        href: r.url,
+      }));
+    }
+  }
 
   // Single entity from _get or _create tools
   if (toolName.endsWith("_get")) {
