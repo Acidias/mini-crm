@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
-import { companies, persons } from "@/db/schema";
-import { count, desc, isNull, lt, sql } from "drizzle-orm";
+import { companies, persons, events } from "@/db/schema";
+import { count, desc, isNull, lt, sql, gte, asc, eq } from "drizzle-orm";
 
 function timeAgo(date: Date | null): string {
   if (!date) return "Never";
@@ -72,6 +72,22 @@ export default async function Home() {
     .orderBy(desc(companies.createdAt))
     .limit(5);
 
+  const today = new Date().toISOString().split("T")[0];
+  const upcomingEvents = await db
+    .select({
+      id: events.id,
+      name: events.name,
+      date: events.date,
+      location: events.location,
+      status: events.status,
+      companyName: companies.name,
+    })
+    .from(events)
+    .leftJoin(companies, eq(events.companyId, companies.id))
+    .where(gte(events.date, today))
+    .orderBy(asc(events.date))
+    .limit(5);
+
   return (
     <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-8">
@@ -82,6 +98,12 @@ export default async function Home() {
             className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
           >
             + Add Person
+          </Link>
+          <Link
+            href="/events/new"
+            className="bg-white text-foreground border border-border px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+          >
+            + Add Event
           </Link>
           <Link
             href="/companies/new"
@@ -158,6 +180,51 @@ export default async function Home() {
               ))}
             </tbody>
           </table>
+        )}
+      </div>
+
+      {/* Upcoming events */}
+      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">Upcoming Events</h2>
+          <Link href="/events" className="text-accent text-xs hover:underline">View all</Link>
+        </div>
+        {upcomingEvents.length === 0 ? (
+          <p className="text-muted text-sm">No upcoming events.</p>
+        ) : (
+          <div className="space-y-2">
+            {upcomingEvents.map((e) => (
+              <div key={e.id} className="flex items-center justify-between py-1.5 border-t border-border first:border-0">
+                <div className="flex items-center gap-3">
+                  <div className="text-center bg-gray-100 rounded-lg px-2.5 py-1 min-w-[3rem]">
+                    <p className="text-xs text-muted leading-tight">
+                      {new Date(e.date + "T00:00:00").toLocaleDateString("en-GB", { month: "short" })}
+                    </p>
+                    <p className="text-lg font-bold leading-tight">
+                      {new Date(e.date + "T00:00:00").getDate()}
+                    </p>
+                  </div>
+                  <div>
+                    <Link href={`/events/${e.id}/edit`} className="text-accent hover:underline text-sm font-medium">
+                      {e.name}
+                    </Link>
+                    <p className="text-muted text-xs">
+                      {e.location && <>{e.location}</>}
+                      {e.location && e.companyName && <> &middot; </>}
+                      {e.companyName && <>{e.companyName}</>}
+                    </p>
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                  e.status === "upcoming" ? "bg-blue-100 text-blue-700" :
+                  e.status === "attended" ? "bg-green-100 text-green-700" :
+                  "bg-gray-100 text-gray-500"
+                }`}>
+                  {e.status.charAt(0).toUpperCase() + e.status.slice(1)}
+                </span>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 

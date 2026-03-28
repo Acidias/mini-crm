@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, timestamp, date } from "drizzle-orm/pg-core";
 
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
@@ -24,6 +24,20 @@ export const persons = pgTable("persons", {
     onDelete: "set null",
   }),
   lastContactedAt: timestamp("last_contacted_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const events = pgTable("events", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  date: date("date").notNull(),
+  location: varchar("location", { length: 500 }),
+  description: text("description"),
+  companyId: integer("company_id").references(() => companies.id, {
+    onDelete: "set null",
+  }),
+  status: varchar("status", { length: 50 }).notNull().default("upcoming"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
