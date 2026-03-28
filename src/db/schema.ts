@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, date, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, timestamp, date, boolean, index, uniqueIndex, jsonb } from "drizzle-orm/pg-core";
 
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
@@ -129,3 +129,11 @@ export const entityTags = pgTable("entity_tags", {
   index("entity_tags_person_id_idx").on(table.personId),
   index("entity_tags_company_id_idx").on(table.companyId),
 ]);
+
+export const chatSessions = pgTable("chat_sessions", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull().default("New Chat"),
+  messages: jsonb("messages").notNull().default([]),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
