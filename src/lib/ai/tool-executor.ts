@@ -41,38 +41,35 @@ async function fetchWebPage(url: string): Promise<string> {
   return text.length > 15000 ? text.slice(0, 15000) + "\n\n[Content truncated at 15000 chars]" : text;
 }
 
-async function searchDuckDuckGo(query: string): Promise<{ title: string; url: string; snippet: string }[]> {
-  const encoded = encodeURIComponent(query);
-  const res = await fetch(`https://html.duckduckgo.com/html/?q=${encoded}`, {
+async function searchSerper(query: string): Promise<{ title: string; url: string; snippet: string }[]> {
+  const apiKey = process.env.SERPER_API_KEY;
+  if (!apiKey) throw new Error("SERPER_API_KEY not configured");
+
+  const res = await fetch("https://google.serper.dev/search", {
+    method: "POST",
     headers: {
-      "User-Agent": "Mozilla/5.0 (compatible; MiniCRM/1.0)",
-      Accept: "text/html",
+      "X-API-KEY": apiKey,
+      "Content-Type": "application/json",
     },
+    body: JSON.stringify({ q: query, num: 10 }),
     signal: AbortSignal.timeout(10000),
   });
+
   if (!res.ok) throw new Error(`Search failed: HTTP ${res.status}`);
-  const html = await res.text();
-  const $ = cheerio.load(html);
+  const data = await res.json();
 
   const results: { title: string; url: string; snippet: string }[] = [];
-  $(".result").each((_, el) => {
-    const title = $(el).find(".result__title a").text().trim();
-    const href = $(el).find(".result__title a").attr("href") || "";
-    const snippet = $(el).find(".result__snippet").text().trim();
 
-    // DuckDuckGo wraps URLs in a redirect, extract the actual URL
-    let url = href;
-    try {
-      const parsed = new URL(href, "https://duckduckgo.com");
-      url = parsed.searchParams.get("uddg") || href;
-    } catch {
-      // Use href as-is
+  // Organic results
+  if (data.organic) {
+    for (const item of data.organic) {
+      results.push({
+        title: item.title || "",
+        url: item.link || "",
+        snippet: item.snippet || "",
+      });
     }
-
-    if (title && url) {
-      results.push({ title, url, snippet });
-    }
-  });
+  }
 
   return results.slice(0, 10);
 }
@@ -96,7 +93,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     const query = input.query as string;
     if (!query) return { success: false, error: "Query is required" };
     try {
-      const results = await searchDuckDuckGo(query);
+      const results = await searchSerper(query);
       if (results.length === 0) return { success: true, data: { results: [], message: "No results found" } };
       return { success: true, data: { query, results } };
     } catch (err) {

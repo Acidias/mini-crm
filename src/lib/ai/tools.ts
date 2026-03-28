@@ -17,7 +17,7 @@ export const allTools: Tool[] = [
   },
   {
     name: "web_search",
-    description: "Search the web using DuckDuckGo and return results. Use this to find LinkedIn profiles, company information, contact details, Companies House records, etc. Returns a list of search result titles, URLs, and snippets.",
+    description: "Search the web using Google and return results. Use this to find LinkedIn profiles, company information, contact details, Companies House records, etc. Returns a list of search result titles, URLs, and snippets.",
     input_schema: {
       type: "object" as const,
       properties: {
