@@ -60,6 +60,7 @@ const TOOL_LABELS: Record<string, string> = {
 };
 
 export default function AIChatPage() {
+  const abortControllerRef = useRef<AbortController | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSessionId, setActiveSessionId] = useState<number | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -240,11 +241,16 @@ export default function AIChatPage() {
       content: m.content,
     }));
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+    let finalMessages = newMessages;
+
     try {
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: conversation, apiKey }),
+        signal: controller.signal,
       });
 
       if (!response.ok) {
@@ -261,7 +267,6 @@ export default function AIChatPage() {
       let buffer = "";
       let assistantText = "";
       let toolCalls: ToolCall[] = [];
-      let finalMessages = newMessages;
 
       while (true) {
         const { done, value } = await reader.read();
@@ -328,16 +333,28 @@ export default function AIChatPage() {
         }
       }
     } catch (err) {
-      const errorMsgs = [
-        ...newMessages,
-        { role: "assistant" as const, content: `Connection error: ${err instanceof Error ? err.message : "Unknown"}` },
-      ];
-      setMessages(errorMsgs);
-      if (sessionId) saveMessages(sessionId, errorMsgs);
+      if (err instanceof DOMException && err.name === "AbortError") {
+        // User stopped - save what we have
+        if (sessionId && finalMessages.length > newMessages.length) {
+          saveMessages(sessionId, finalMessages);
+        }
+      } else {
+        const errorMsgs = [
+          ...newMessages,
+          { role: "assistant" as const, content: `Connection error: ${err instanceof Error ? err.message : "Unknown"}` },
+        ];
+        setMessages(errorMsgs);
+        if (sessionId) saveMessages(sessionId, errorMsgs);
+      }
     } finally {
+      abortControllerRef.current = null;
       setIsLoading(false);
       inputRef.current?.focus();
     }
+  }
+
+  function stopGeneration() {
+    abortControllerRef.current?.abort();
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -487,32 +504,30 @@ export default function AIChatPage() {
 
           {messages.map((msg, i) => (
             <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[80%] rounded-xl px-4 py-3 text-sm ${
-                  msg.role === "user"
-                    ? "bg-accent text-white"
-                    : "bg-gray-100 text-foreground"
-                }`}
-              >
-                {msg.toolCalls && msg.toolCalls.length > 0 && (
-                  <div className="space-y-1.5 mb-2">
-                    {msg.toolCalls.map((tc) => (
-                      <ToolCallCard key={tc.id} toolCall={tc} />
-                    ))}
-                  </div>
-                )}
-                {msg.content && (
-                  <div className={msg.role === "user" ? "whitespace-pre-wrap" : "prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none"}>
-                    {msg.role === "user" ? msg.content : <ReactMarkdown>{msg.content}</ReactMarkdown>}
-                  </div>
-                )}
-              </div>
+              {msg.role === "user" ? (
+                <div className="max-w-[80%] rounded-xl px-4 py-3 text-sm bg-accent text-white whitespace-pre-wrap">
+                  {msg.content}
+                </div>
+              ) : (
+                <div className="max-w-[90%] space-y-3">
+                  {/* Tool calls - compact grouped bar */}
+                  {msg.toolCalls && msg.toolCalls.length > 0 && (
+                    <ToolCallsGroup toolCalls={msg.toolCalls} />
+                  )}
+                  {/* Text content */}
+                  {msg.content && (
+                    <div className="bg-gray-100 rounded-xl px-5 py-4 text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-4 prose-headings:mb-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-table:border-collapse">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ))}
 
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-xl px-4 py-3 text-sm text-muted">
+              <div className="bg-gray-100 rounded-xl px-4 py-3 text-sm text-muted animate-pulse">
                 Thinking...
               </div>
             </div>
@@ -533,79 +548,140 @@ export default function AIChatPage() {
             className="border border-border rounded-xl flex-1 px-4 py-3 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             disabled={isLoading}
           />
-          <button
-            onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
-            className="bg-accent text-white px-6 py-3 rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
-          >
-            Send
-          </button>
+          {isLoading ? (
+            <button
+              onClick={stopGeneration}
+              className="bg-danger text-white px-6 py-3 rounded-xl text-sm hover:bg-red-600 transition-colors"
+            >
+              Stop
+            </button>
+          ) : (
+            <button
+              onClick={sendMessage}
+              disabled={!input.trim()}
+              className="bg-accent text-white px-6 py-3 rounded-xl text-sm hover:bg-accent-hover transition-colors disabled:opacity-50"
+            >
+              Send
+            </button>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
-  const [showRaw, setShowRaw] = useState(false);
-  const label = TOOL_LABELS[toolCall.name] || toolCall.name;
-  const hasResult = !!toolCall.result;
-  const isSuccess = toolCall.result?.success;
+// ─── Grouped tool calls: compact collapsible section ───
 
-  const entities = hasResult && isSuccess ? extractEntities(toolCall.name, toolCall.result!.data) : [];
+function ToolCallsGroup({ toolCalls }: { toolCalls: ToolCall[] }) {
+  const [expanded, setExpanded] = useState(false);
+
+  // Collect all entity cards from all tool calls
+  const allEntities: Entity[] = [];
+  const errors: string[] = [];
+  const steps: { label: string; success: boolean | null }[] = [];
+
+  for (const tc of toolCalls) {
+    const label = TOOL_LABELS[tc.name] || tc.name;
+    const hasResult = !!tc.result;
+    const isSuccess = tc.result?.success;
+    steps.push({ label, success: hasResult ? (isSuccess ?? false) : null });
+
+    if (hasResult && isSuccess) {
+      allEntities.push(...extractEntities(tc.name, tc.result!.data));
+    }
+    if (hasResult && !isSuccess && tc.result?.error) {
+      errors.push(`${label}: ${tc.result.error}`);
+    }
+  }
+
+  const doneCount = steps.filter((s) => s.success !== null).length;
+  const failCount = steps.filter((s) => s.success === false).length;
+  const pendingCount = steps.filter((s) => s.success === null).length;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 text-xs overflow-hidden">
-      <div className="flex items-center gap-2 px-3 py-1.5">
-        <span className={`w-1.5 h-1.5 rounded-full ${
-          !hasResult ? "bg-amber-400 animate-pulse" : isSuccess ? "bg-green-500" : "bg-red-500"
-        }`} />
-        <span className="font-medium text-gray-700">{label}</span>
-        {hasResult && (
-          <button onClick={() => setShowRaw(!showRaw)} className="text-gray-400 ml-auto hover:text-gray-600">
-            {showRaw ? "\u25B2" : "\u25BC"}
-          </button>
-        )}
-      </div>
+    <div className="bg-white rounded-xl border border-gray-200 text-xs overflow-hidden">
+      {/* Compact header */}
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 transition-colors"
+      >
+        <div className="flex gap-0.5">
+          {steps.map((s, i) => (
+            <span key={i} className={`w-1.5 h-1.5 rounded-full ${
+              s.success === null ? "bg-amber-400 animate-pulse" : s.success ? "bg-green-400" : "bg-red-400"
+            }`} />
+          ))}
+        </div>
+        <span className="text-gray-500">
+          {pendingCount > 0
+            ? `Running ${steps[steps.length - 1]?.label}...`
+            : `${doneCount} tool call${doneCount !== 1 ? "s" : ""}${failCount > 0 ? ` (${failCount} failed)` : ""}`
+          }
+        </span>
+        <span className="text-gray-300 ml-auto">{expanded ? "\u25B2" : "\u25BC"}</span>
+      </button>
 
-      {/* Entity cards */}
-      {entities.length > 0 && (
-        <div className="px-2 pb-2 flex flex-wrap gap-1.5">
-          {entities.map((entity, i) => (
+      {/* Entity cards - always visible when there are CRM entities */}
+      {allEntities.filter((e) => e.type !== "activity").length > 0 && (
+        <div className="px-3 pb-2 flex flex-wrap gap-1.5">
+          {allEntities.filter((e) => e.type !== "activity").map((entity, i) => (
             <EntityCard key={i} entity={entity} />
           ))}
         </div>
       )}
 
-      {/* Error display */}
-      {hasResult && !isSuccess && toolCall.result?.error && (
-        <div className="px-3 py-1.5 border-t border-red-100 bg-red-50 text-red-600">
-          {toolCall.result.error}
+      {/* Expanded: show each step */}
+      {expanded && (
+        <div className="border-t border-gray-100">
+          {toolCalls.map((tc) => (
+            <ToolCallDetail key={tc.id} toolCall={tc} />
+          ))}
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Raw JSON toggle */}
+function ToolCallDetail({ toolCall }: { toolCall: ToolCall }) {
+  const [showRaw, setShowRaw] = useState(false);
+  const label = TOOL_LABELS[toolCall.name] || toolCall.name;
+  const hasResult = !!toolCall.result;
+  const isSuccess = toolCall.result?.success;
+
+  return (
+    <div className="border-b border-gray-50 last:border-0">
+      <div className="flex items-center gap-2 px-3 py-1.5">
+        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+          !hasResult ? "bg-amber-400 animate-pulse" : isSuccess ? "bg-green-400" : "bg-red-400"
+        }`} />
+        <span className="text-gray-600 truncate">{label}</span>
+        {hasResult && !isSuccess && toolCall.result?.error && (
+          <span className="text-red-500 truncate ml-1">- {toolCall.result.error}</span>
+        )}
+        <button
+          onClick={() => setShowRaw(!showRaw)}
+          className="text-gray-300 ml-auto hover:text-gray-500 flex-shrink-0"
+        >
+          {showRaw ? "\u25B2" : "\u25BC"}
+        </button>
+      </div>
       {showRaw && (
-        <div className="px-3 py-2 border-t border-gray-100 space-y-1.5">
-          <div>
-            <p className="text-gray-400 font-medium">Input:</p>
-            <pre className="text-gray-600 whitespace-pre-wrap break-all">
-              {JSON.stringify(toolCall.input, null, 2)}
-            </pre>
-          </div>
+        <div className="px-3 py-1.5 bg-gray-50 space-y-1">
+          <pre className="text-gray-500 whitespace-pre-wrap break-all text-[10px]">
+            {JSON.stringify(toolCall.input, null, 2)}
+          </pre>
           {toolCall.result && (
-            <div>
-              <p className="text-gray-400 font-medium">Result:</p>
-              <pre className="text-gray-600 whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
-                {JSON.stringify(toolCall.result.data, null, 2)}
-              </pre>
-            </div>
+            <pre className="text-gray-500 whitespace-pre-wrap break-all text-[10px] max-h-32 overflow-y-auto">
+              {JSON.stringify(toolCall.result.data, null, 2)}
+            </pre>
           )}
         </div>
       )}
     </div>
   );
 }
+
+// ─── Entity types and extraction ───
 
 type Entity = {
   type: "person" | "company" | "event" | "todo" | "email" | "activity" | "tag";
@@ -618,35 +694,17 @@ type Entity = {
 function extractEntities(toolName: string, data: unknown): Entity[] {
   if (!data) return [];
 
-  // Web tools
   if (toolName === "web_fetch") {
     const d = data as Record<string, unknown>;
-    if (d.url) {
-      return [{
-        type: "activity" as const,
-        id: 0,
-        label: String(d.url).replace(/^https?:\/\//, "").slice(0, 60),
-        subtitle: `${d.length || 0} chars fetched`,
-        href: d.url as string,
-      }];
-    }
+    if (d.url) return [{ type: "activity", id: 0, label: String(d.url).replace(/^https?:\/\//, "").slice(0, 50), subtitle: `${d.length || 0} chars`, href: d.url as string }];
   }
 
   if (toolName === "web_search") {
     const d = data as Record<string, unknown>;
-    const results = d.results as { title: string; url: string; snippet: string }[] | undefined;
-    if (results && Array.isArray(results)) {
-      return results.slice(0, 8).map((r) => ({
-        type: "activity" as const,
-        id: 0,
-        label: r.title,
-        subtitle: r.snippet?.slice(0, 80) || r.url,
-        href: r.url,
-      }));
-    }
+    const results = d.results as { title: string; url: string }[] | undefined;
+    if (results?.length) return results.slice(0, 5).map((r) => ({ type: "activity" as const, id: 0, label: r.title.slice(0, 50), href: r.url }));
   }
 
-  // Single entity from _get or _create tools
   if (toolName.endsWith("_get")) {
     const d = data as Record<string, unknown>;
     if (toolName === "persons_get" && d.person) return [personEntity(d.person as Record<string, unknown>)];
@@ -656,8 +714,7 @@ function extractEntities(toolName: string, data: unknown): Entity[] {
     if (toolName === "emails_get" && d.email) return [emailEntity(d.email as Record<string, unknown>)];
   }
 
-  // Created/updated entities
-  if (toolName.endsWith("_create") || toolName.endsWith("_update") || toolName === "persons_mark_contacted") {
+  if (toolName.endsWith("_create") || toolName.endsWith("_update") || toolName === "persons_mark_contacted" || toolName === "todos_toggle") {
     const d = data as Record<string, unknown>;
     if (d.id && typeof d.id === "number") {
       if (toolName.startsWith("persons")) return [personEntity(d)];
@@ -668,24 +725,16 @@ function extractEntities(toolName: string, data: unknown): Entity[] {
     }
   }
 
-  // Toggle returns the todo
-  if (toolName === "todos_toggle") {
-    const d = data as Record<string, unknown>;
-    if (d.id) return [todoEntity(d)];
-  }
-
-  // List tools return arrays
   if (toolName.endsWith("_list")) {
     const items = Array.isArray(data) ? data : [];
-    if (toolName === "persons_list") return items.slice(0, 10).map((d) => personEntity(d));
-    if (toolName === "companies_list") return items.slice(0, 10).map((d) => companyEntity(d));
-    if (toolName === "events_list") return items.slice(0, 10).map((d) => eventEntity(d));
-    if (toolName === "todos_list") return items.slice(0, 10).map((d) => todoEntity(d));
-    if (toolName === "emails_list") return items.slice(0, 10).map((d) => emailEntity(d));
-    if (toolName === "tags_list") return items.slice(0, 20).map((d) => tagEntity(d));
+    const mapper: Record<string, (d: Record<string, unknown>) => Entity> = {
+      persons_list: personEntity, companies_list: companyEntity, events_list: eventEntity,
+      todos_list: todoEntity, emails_list: emailEntity, tags_list: tagEntity,
+    };
+    const fn = mapper[toolName];
+    if (fn) return items.slice(0, 10).map((d) => fn(d));
   }
 
-  // Send email returns the email record
   if (toolName === "emails_send" || toolName === "emails_save_draft") {
     const d = data as Record<string, unknown>;
     if (d.id) return [emailEntity(d)];
@@ -696,64 +745,23 @@ function extractEntities(toolName: string, data: unknown): Entity[] {
 
 function personEntity(d: Record<string, unknown>): Entity {
   const parts = [d.position, d.companyName].filter(Boolean);
-  return {
-    type: "person",
-    id: d.id as number,
-    label: d.name as string,
-    subtitle: parts.length > 0 ? parts.join(" at ") : (d.email as string) || undefined,
-    href: `/persons/${d.id}`,
-  };
+  return { type: "person", id: d.id as number, label: d.name as string, subtitle: parts.length > 0 ? parts.join(" at ") : (d.email as string) || undefined, href: `/persons/${d.id}` };
 }
-
 function companyEntity(d: Record<string, unknown>): Entity {
-  return {
-    type: "company",
-    id: d.id as number,
-    label: d.name as string,
-    subtitle: (d.industry as string) || (d.website as string) || undefined,
-    href: `/companies/${d.id}`,
-  };
+  return { type: "company", id: d.id as number, label: d.name as string, subtitle: (d.industry as string) || undefined, href: `/companies/${d.id}` };
 }
-
 function eventEntity(d: Record<string, unknown>): Entity {
-  return {
-    type: "event",
-    id: d.id as number,
-    label: d.name as string,
-    subtitle: [d.date, d.location].filter(Boolean).join(" - ") || undefined,
-    href: `/events/${d.id}/edit`,
-  };
+  return { type: "event", id: d.id as number, label: d.name as string, subtitle: [d.date, d.location].filter(Boolean).join(" - ") || undefined, href: `/events/${d.id}/edit` };
 }
-
 function todoEntity(d: Record<string, unknown>): Entity {
-  return {
-    type: "todo",
-    id: d.id as number,
-    label: d.title as string,
-    subtitle: d.dueDate ? `Due ${d.dueDate}` : d.done ? "Done" : "Pending",
-    href: `/todos/${d.id}/edit`,
-  };
+  return { type: "todo", id: d.id as number, label: d.title as string, subtitle: d.dueDate ? `Due ${d.dueDate}` : d.done ? "Done" : "Pending", href: `/todos/${d.id}/edit` };
 }
-
 function emailEntity(d: Record<string, unknown>): Entity {
-  const dir = d.direction === "inbound" ? "From" : "To";
   const addr = d.direction === "inbound" ? d.fromAddress : d.toAddress;
-  return {
-    type: "email",
-    id: d.id as number,
-    label: (d.subject as string) || "(No subject)",
-    subtitle: addr ? `${dir}: ${addr}` : undefined,
-    href: d.status === "draft" ? `/emails/compose?draft=${d.id}` : `/emails/${d.id}`,
-  };
+  return { type: "email", id: d.id as number, label: (d.subject as string) || "(No subject)", subtitle: addr ? String(addr) : undefined, href: d.status === "draft" ? `/emails/compose?draft=${d.id}` : `/emails/${d.id}` };
 }
-
 function tagEntity(d: Record<string, unknown>): Entity {
-  return {
-    type: "tag",
-    id: d.id as number,
-    label: d.name as string,
-    href: "#",
-  };
+  return { type: "tag", id: d.id as number, label: d.name as string, href: "#" };
 }
 
 const TYPE_STYLES: Record<string, { bg: string; icon: string }> = {
@@ -763,7 +771,7 @@ const TYPE_STYLES: Record<string, { bg: string; icon: string }> = {
   todo: { bg: "bg-green-50 border-green-200 hover:bg-green-100", icon: "\u2611" },
   email: { bg: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100", icon: "\u2709" },
   tag: { bg: "bg-gray-50 border-gray-200", icon: "\u25CF" },
-  activity: { bg: "bg-gray-50 border-gray-200", icon: "\u25CB" },
+  activity: { bg: "bg-gray-50 border-gray-200 hover:bg-gray-100", icon: "\u25CB" },
 };
 
 function EntityCard({ entity }: { entity: Entity }) {
@@ -771,7 +779,7 @@ function EntityCard({ entity }: { entity: Entity }) {
 
   if (entity.type === "tag") {
     return (
-      <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
+      <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
         {entity.label}
       </span>
     );
@@ -782,15 +790,13 @@ function EntityCard({ entity }: { entity: Entity }) {
       href={entity.href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] transition-colors ${style.bg}`}
+      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] transition-colors ${style.bg}`}
     >
-      <span className="text-xs">{style.icon}</span>
-      <div className="min-w-0">
-        <span className="font-medium text-gray-800 block truncate max-w-[200px]">{entity.label}</span>
-        {entity.subtitle && (
-          <span className="text-gray-500 block truncate max-w-[200px]">{entity.subtitle}</span>
-        )}
-      </div>
+      <span>{style.icon}</span>
+      <span className="font-medium text-gray-800 truncate max-w-[180px]">{entity.label}</span>
+      {entity.subtitle && (
+        <span className="text-gray-400 truncate max-w-[120px] hidden sm:inline">{entity.subtitle}</span>
+      )}
     </a>
   );
 }
