@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   }
 
   const sessions = await db
-    .select({ id: chatSessions.id, title: chatSessions.title, updatedAt: chatSessions.updatedAt })
+    .select({ id: chatSessions.id, title: chatSessions.title, status: chatSessions.status, updatedAt: chatSessions.updatedAt })
     .from(chatSessions)
     .orderBy(desc(chatSessions.updatedAt));
 

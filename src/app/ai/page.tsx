@@ -19,6 +19,7 @@ type Message = {
 type Session = {
   id: number;
   title: string;
+  status: string;
   updatedAt: string;
 };
 
@@ -91,23 +92,62 @@ export default function AIChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Reload session from DB when tab regains focus (picks up background server-side saves)
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Check session status on visibility change + poll while working
   useEffect(() => {
     function handleVisibilityChange() {
-      if (document.visibilityState === "visible" && activeSessionId && !isLoading) {
-        reloadCurrentSession(activeSessionId);
+      if (document.visibilityState === "visible" && activeSessionId) {
+        checkSessionStatus(activeSessionId);
       }
     }
     document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, [activeSessionId, isLoading]);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
+  }, [activeSessionId]);
 
-  async function reloadCurrentSession(id: number) {
+  async function checkSessionStatus(id: number) {
     const res = await fetch(`/api/ai/sessions?get=${id}`);
-    if (res.ok) {
-      const data = await res.json();
-      if (data.messages && Array.isArray(data.messages)) {
-        setMessages(data.messages);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    if (data.messages && Array.isArray(data.messages)) {
+      setMessages(data.messages);
+    }
+
+    // Update session status in sidebar
+    setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: data.status } : s));
+
+    if (data.status === "working") {
+      setIsLoading(true);
+      if (!pollingRef.current) {
+        pollingRef.current = setInterval(() => pollSession(id), 3000);
+      }
+    } else {
+      setIsLoading(false);
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    }
+  }
+
+  async function pollSession(id: number) {
+    const res = await fetch(`/api/ai/sessions?get=${id}`);
+    if (!res.ok) return;
+    const data = await res.json();
+
+    if (data.messages && Array.isArray(data.messages)) {
+      setMessages(data.messages);
+    }
+
+    if (data.status !== "working") {
+      setIsLoading(false);
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
       }
     }
   }
@@ -151,7 +191,7 @@ export default function AIChatPage() {
     });
     if (res.ok) {
       const session = await res.json();
-      setSessions((prev) => [{ id: session.id, title: session.title, updatedAt: session.updatedAt }, ...prev]);
+      setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", updatedAt: session.updatedAt }, ...prev]);
       setActiveSessionId(session.id);
       setMessages([]);
       inputRef.current?.focus();
@@ -247,7 +287,7 @@ export default function AIChatPage() {
         const session = await res.json();
         sessionId = session.id;
         setActiveSessionId(session.id);
-        setSessions((prev) => [{ id: session.id, title: session.title, updatedAt: session.updatedAt }, ...prev]);
+        setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", updatedAt: session.updatedAt }, ...prev]);
       }
     }
 
@@ -355,21 +395,31 @@ export default function AIChatPage() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") {
-        // User stopped - save what we have
-        if (sessionId && finalMessages.length > newMessages.length) {
-          saveMessages(sessionId, finalMessages);
+        // User clicked Stop - server will finish and set status=idle
+        // Check if server is still working
+        if (sessionId) {
+          checkSessionStatus(sessionId);
+          return; // Don't set isLoading=false yet, let checkSessionStatus handle it
         }
       } else {
+        // Stream disconnected (tab switch, network error)
+        // Server may still be working - check status instead of assuming stopped
+        if (sessionId) {
+          checkSessionStatus(sessionId);
+          return;
+        }
         const errorMsgs = [
           ...newMessages,
           { role: "assistant" as const, content: `Connection error: ${err instanceof Error ? err.message : "Unknown"}` },
         ];
         setMessages(errorMsgs);
-        if (sessionId) saveMessages(sessionId, errorMsgs);
       }
     } finally {
       abortControllerRef.current = null;
-      setIsLoading(false);
+      // Only set idle if we didn't defer to checkSessionStatus
+      if (!activeSessionId) {
+        setIsLoading(false);
+      }
       inputRef.current?.focus();
     }
   }
@@ -450,8 +500,11 @@ export default function AIChatPage() {
               ) : (
                 <button
                   onClick={() => selectSession(s.id)}
-                  className="flex-1 text-left truncate text-xs"
+                  className="flex-1 text-left truncate text-xs flex items-center gap-1.5"
                 >
+                  {s.status === "working" && (
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse flex-shrink-0" />
+                  )}
                   {s.title}
                 </button>
               )}
@@ -546,10 +599,18 @@ export default function AIChatPage() {
             </div>
           ))}
 
-          {isLoading && messages[messages.length - 1]?.role === "user" && (
+          {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-gray-100 rounded-xl px-4 py-3 text-sm text-muted animate-pulse">
-                Thinking...
+              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 flex items-center gap-2">
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                </span>
+                {!abortControllerRef.current
+                  ? "AI is working in the background..."
+                  : "AI is thinking..."
+                }
               </div>
             </div>
           )}

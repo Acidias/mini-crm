@@ -54,6 +54,11 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      // Mark session as working
+      if (sessionId) {
+        await db.update(chatSessions).set({ status: "working" }).where(eq(chatSessions.id, sessionId));
+      }
+
       try {
         const anthropicMessages: Anthropic.Messages.MessageParam[] = messages.map(
           (m: { role: string; content: string }) => ({
@@ -179,6 +184,12 @@ export async function POST(req: NextRequest) {
           send({ type: "error", message });
         }
       } finally {
+        // Mark session as idle
+        if (sessionId) {
+          try {
+            await db.update(chatSessions).set({ status: "idle", updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+          } catch { /* non-critical */ }
+        }
         if (!clientDisconnected) {
           try { controller.close(); } catch { /* already closed */ }
         }
