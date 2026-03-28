@@ -12,6 +12,7 @@ export async function createPerson(formData: FormData) {
     name: formData.get("name") as string,
     email: (formData.get("email") as string) || null,
     phone: (formData.get("phone") as string) || null,
+    position: (formData.get("position") as string) || null,
     notes: (formData.get("notes") as string) || null,
     companyId: companyId ? parseInt(companyId) : null,
   });
@@ -26,6 +27,7 @@ export async function updatePerson(id: number, formData: FormData) {
       name: formData.get("name") as string,
       email: (formData.get("email") as string) || null,
       phone: (formData.get("phone") as string) || null,
+      position: (formData.get("position") as string) || null,
       notes: (formData.get("notes") as string) || null,
       companyId: companyId ? parseInt(companyId) : null,
       updatedAt: new Date(),
@@ -37,4 +39,16 @@ export async function updatePerson(id: number, formData: FormData) {
 export async function deletePerson(id: number) {
   await db.delete(persons).where(eq(persons.id, id));
   revalidatePath("/persons");
+}
+
+export async function markAsContacted(id: number) {
+  await db
+    .update(persons)
+    .set({
+      lastContactedAt: new Date(),
+      updatedAt: new Date(),
+    })
+    .where(eq(persons.id, id));
+  revalidatePath("/persons");
+  revalidatePath("/");
 }

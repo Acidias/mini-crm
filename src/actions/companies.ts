@@ -11,6 +11,9 @@ export async function createCompany(formData: FormData) {
     name: formData.get("name") as string,
     website: (formData.get("website") as string) || null,
     industry: (formData.get("industry") as string) || null,
+    email: (formData.get("email") as string) || null,
+    phone: (formData.get("phone") as string) || null,
+    address: (formData.get("address") as string) || null,
     notes: (formData.get("notes") as string) || null,
   });
   redirect("/companies");
@@ -23,6 +26,9 @@ export async function updateCompany(id: number, formData: FormData) {
       name: formData.get("name") as string,
       website: (formData.get("website") as string) || null,
       industry: (formData.get("industry") as string) || null,
+      email: (formData.get("email") as string) || null,
+      phone: (formData.get("phone") as string) || null,
+      address: (formData.get("address") as string) || null,
       notes: (formData.get("notes") as string) || null,
       updatedAt: new Date(),
     })
