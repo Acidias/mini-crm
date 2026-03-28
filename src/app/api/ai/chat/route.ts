@@ -76,13 +76,27 @@ export async function POST(req: NextRequest) {
           (m: { role: string; content: string }) => ({ role: m.role, content: m.content })
         );
 
+        // System prompt with cache control - cached across loop iterations
+        const systemPrompt: Anthropic.Messages.TextBlockParam = {
+          type: "text",
+          text: getSystemPrompt(),
+          cache_control: { type: "ephemeral" },
+        };
+
+        // Tools with cache control on the last tool
+        const cachedTools = allTools.map((tool, i) =>
+          i === allTools.length - 1
+            ? { ...tool, cache_control: { type: "ephemeral" as const } }
+            : tool
+        );
+
         // Agentic loop
         while (true) {
           const messageStream = anthropic.messages.stream({
             model: "claude-sonnet-4-20250514",
             max_tokens: 4096,
-            system: getSystemPrompt(),
-            tools: allTools,
+            system: [systemPrompt],
+            tools: cachedTools,
             messages: anthropicMessages,
           });
 
@@ -139,10 +153,16 @@ export async function POST(req: NextRequest) {
               result,
             });
 
+            // Truncate large results to save tokens on subsequent loop iterations
+            const resultJson = JSON.stringify(result);
+            const truncatedResult = resultJson.length > 4000
+              ? resultJson.slice(0, 4000) + '..."}'
+              : resultJson;
+
             toolResults.push({
               type: "tool_result",
               tool_use_id: toolBlock.id,
-              content: JSON.stringify(result),
+              content: truncatedResult,
               is_error: !result.success,
             });
           }
