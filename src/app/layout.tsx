@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
+import { auth, signOut } from "@/auth";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,37 +39,60 @@ function NavLink({
   );
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex">
-        <aside className="w-56 bg-sidebar-bg flex flex-col fixed h-full">
-          <div className="px-5 py-5">
-            <Link href="/" className="text-white font-bold text-lg tracking-tight">
-              Mini CRM
-            </Link>
-          </div>
-          <nav className="flex-1 px-3 space-y-1">
-            <NavLink href="/" icon="&#9632;" label="Dashboard" />
-            <NavLink href="/emails" icon="&#9993;" label="Emails" />
-            <NavLink href="/persons" icon="&#9679;" label="Persons" />
-            <NavLink href="/companies" icon="&#9670;" label="Companies" />
-            <NavLink href="/events" icon="&#9733;" label="Events" />
-            <NavLink href="/todos" icon="&#9745;" label="To-Dos" />
-            <NavLink href="/calendar" icon="&#9776;" label="Calendar" />
-          </nav>
-          <div className="px-5 py-4 border-t border-white/10">
-            <p className="text-xs text-sidebar-text/50">Mini CRM v1.0</p>
-          </div>
-        </aside>
-        <main className="flex-1 ml-56 p-8 min-h-screen">{children}</main>
+        {session?.user ? (
+          <>
+            <aside className="w-56 bg-sidebar-bg flex flex-col fixed h-full">
+              <div className="px-5 py-5">
+                <Link href="/" className="text-white font-bold text-lg tracking-tight">
+                  Mini CRM
+                </Link>
+              </div>
+              <nav className="flex-1 px-3 space-y-1">
+                <NavLink href="/" icon="&#9632;" label="Dashboard" />
+                <NavLink href="/emails" icon="&#9993;" label="Emails" />
+                <NavLink href="/persons" icon="&#9679;" label="Persons" />
+                <NavLink href="/companies" icon="&#9670;" label="Companies" />
+                <NavLink href="/events" icon="&#9733;" label="Events" />
+                <NavLink href="/todos" icon="&#9745;" label="To-Dos" />
+                <NavLink href="/calendar" icon="&#9776;" label="Calendar" />
+              </nav>
+              <div className="px-4 py-4 border-t border-white/10">
+                <p className="text-xs text-sidebar-text truncate mb-2">
+                  {session.user.email}
+                </p>
+                <form
+                  action={async () => {
+                    "use server";
+                    await signOut({ redirectTo: "/login" });
+                  }}
+                >
+                  <button
+                    type="submit"
+                    className="text-xs text-sidebar-text/50 hover:text-white transition-colors"
+                  >
+                    Sign out
+                  </button>
+                </form>
+              </div>
+            </aside>
+            <main className="flex-1 ml-56 p-8 min-h-screen">{children}</main>
+          </>
+        ) : (
+          <main className="flex-1">{children}</main>
+        )}
       </body>
     </html>
   );
