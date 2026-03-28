@@ -63,11 +63,15 @@ export const emails = pgTable("emails", {
   personId: integer("person_id").references(() => persons.id, {
     onDelete: "set null",
   }),
+  status: varchar("status", { length: 20 }).notNull().default("sent"), // "sent", "draft"
   read: boolean("read").notNull().default(false),
+  scheduledAt: timestamp("scheduled_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => [
   index("emails_person_id_idx").on(table.personId),
   index("emails_created_at_idx").on(table.createdAt),
+  index("emails_status_idx").on(table.status),
 ]);
 
 export const todos = pgTable("todos", {

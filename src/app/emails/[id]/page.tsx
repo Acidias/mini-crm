@@ -1,11 +1,11 @@
 import Link from "next/link";
-import DOMPurify from "isomorphic-dompurify";
 import { db } from "@/db";
 import { emails, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { markEmailRead, deleteEmail } from "@/actions/emails";
 import ConfirmDelete from "@/components/confirm-delete";
+import HtmlEmailBody from "./html-body";
 
 export default async function ViewEmailPage({
   params,
@@ -36,9 +36,7 @@ export default async function ViewEmailPage({
   }
 
   const isInbound = email.direction === "inbound";
-  const sanitisedHtml = email.bodyHtml
-    ? DOMPurify.sanitize(email.bodyHtml)
-    : null;
+  const isDraft = email.status === "draft";
 
   return (
     <div className="max-w-3xl">
@@ -55,12 +53,14 @@ export default async function ViewEmailPage({
             <h1 className="text-lg font-bold">{email.subject || "(No subject)"}</h1>
             <span
               className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                isInbound
+                isDraft
+                  ? "bg-amber-100 text-amber-700"
+                  : isInbound
                   ? "bg-green-100 text-green-700"
                   : "bg-blue-100 text-blue-700"
               }`}
             >
-              {isInbound ? "Received" : "Sent"}
+              {isDraft ? "Draft" : isInbound ? "Received" : "Sent"}
             </span>
           </div>
           <div className="text-sm text-muted space-y-1">
@@ -93,11 +93,8 @@ export default async function ViewEmailPage({
 
         {/* Body */}
         <div className="px-6 py-5">
-          {sanitisedHtml ? (
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: sanitisedHtml }}
-            />
+          {email.bodyHtml ? (
+            <HtmlEmailBody html={email.bodyHtml} />
           ) : (
             <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
               {email.bodyText || "(Empty message)"}
@@ -108,12 +105,21 @@ export default async function ViewEmailPage({
         {/* Actions */}
         <div className="px-6 py-3 border-t border-border bg-gray-50/50 flex items-center justify-between">
           <div className="flex gap-2">
-            <Link
-              href={`/emails/compose?to=${encodeURIComponent(isInbound ? email.fromAddress : email.toAddress)}`}
-              className="bg-accent text-white px-4 py-1.5 rounded-lg text-sm hover:bg-accent-hover transition-colors"
-            >
-              {isInbound ? "Reply" : "Send Again"}
-            </Link>
+            {isDraft ? (
+              <Link
+                href={`/emails/compose?draft=${email.id}`}
+                className="bg-accent text-white px-4 py-1.5 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+              >
+                Edit Draft
+              </Link>
+            ) : (
+              <Link
+                href={`/emails/compose?to=${encodeURIComponent(isInbound ? email.fromAddress : email.toAddress)}`}
+                className="bg-accent text-white px-4 py-1.5 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+              >
+                {isInbound ? "Reply" : "Send Again"}
+              </Link>
+            )}
           </div>
           <ConfirmDelete action={deleteEmail.bind(null, email.id)} className="text-danger text-sm hover:underline" />
         </div>

@@ -22,6 +22,7 @@ export async function sendEmail(formData: FormData) {
   const body = formData.get("body") as string;
   const fromRaw = formData.get("from") as string;
   const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
+  const draftId = formData.get("draftId") as string;
 
   const { data, error } = await getResend().emails.send({
     from,
@@ -36,16 +37,36 @@ export async function sendEmail(formData: FormData) {
 
   const personId = await findPersonByEmail(to);
 
-  await db.insert(emails).values({
-    resendId: data?.id || null,
-    direction: "outbound",
-    fromAddress: from,
-    toAddress: to,
-    subject: subject,
-    bodyText: body,
-    personId,
-    read: true,
-  });
+  // If sending from a draft, update it instead of creating new
+  if (draftId) {
+    await db
+      .update(emails)
+      .set({
+        resendId: data?.id || null,
+        direction: "outbound",
+        fromAddress: from,
+        toAddress: to,
+        subject,
+        bodyText: body,
+        personId,
+        status: "sent",
+        read: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(emails.id, parseInt(draftId)));
+  } else {
+    await db.insert(emails).values({
+      resendId: data?.id || null,
+      direction: "outbound",
+      fromAddress: from,
+      toAddress: to,
+      subject,
+      bodyText: body,
+      personId,
+      status: "sent",
+      read: true,
+    });
+  }
 
   // Auto-update lastContactedAt if person found
   if (personId) {
@@ -59,6 +80,45 @@ export async function sendEmail(formData: FormData) {
   redirect("/emails");
 }
 
+export async function saveDraft(formData: FormData) {
+  const to = (formData.get("to") as string) || "";
+  const subject = (formData.get("subject") as string) || "";
+  const body = (formData.get("body") as string) || "";
+  const fromRaw = formData.get("from") as string;
+  const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
+  const draftId = formData.get("draftId") as string;
+
+  const personId = to ? await findPersonByEmail(to) : null;
+
+  if (draftId) {
+    await db
+      .update(emails)
+      .set({
+        fromAddress: from,
+        toAddress: to,
+        subject: subject || null,
+        bodyText: body || null,
+        personId,
+        updatedAt: new Date(),
+      })
+      .where(eq(emails.id, parseInt(draftId)));
+  } else {
+    await db.insert(emails).values({
+      direction: "outbound",
+      fromAddress: from,
+      toAddress: to,
+      subject: subject || null,
+      bodyText: body || null,
+      personId,
+      status: "draft",
+      read: true,
+    });
+  }
+
+  revalidatePath("/emails");
+  redirect("/emails?tab=drafts");
+}
+
 export async function markEmailRead(id: number) {
   await db.update(emails).set({ read: true }).where(eq(emails.id, id));
   revalidatePath("/emails");
@@ -66,5 +126,5 @@ export async function markEmailRead(id: number) {
 
 export async function deleteEmail(id: number) {
   await db.delete(emails).where(eq(emails.id, id));
-  revalidatePath("/emails");
+  redirect("/emails");
 }
