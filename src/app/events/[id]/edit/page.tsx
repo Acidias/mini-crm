@@ -4,6 +4,7 @@ import { events, companies } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateEvent, deleteEvent, updateEventStatus } from "@/actions/events";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export default async function EditEventPage({
   params,
@@ -163,14 +164,7 @@ export default async function EditEventPage({
               Cancel
             </Link>
           </div>
-          <form action={deleteEvent.bind(null, event.id)}>
-            <button
-              type="submit"
-              className="text-danger text-sm hover:underline"
-            >
-              Delete
-            </button>
-          </form>
+          <ConfirmDelete action={deleteEvent.bind(null, event.id)} className="text-danger text-sm hover:underline" />
         </div>
       </form>
     </div>

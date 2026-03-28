@@ -5,6 +5,7 @@ import { eq, desc, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { markAsContacted } from "@/actions/persons";
 import { createActivity, deleteActivity } from "@/actions/activities";
+import ConfirmDelete from "@/components/confirm-delete";
 
 function timeAgo(date: Date | null): string {
   if (!date) return "Never";
@@ -227,9 +228,7 @@ export default async function PersonDetailPage({
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs text-muted">{timeAgo(a.createdAt)}</span>
-                  <form action={deleteActivity.bind(null, a.id)}>
-                    <button type="submit" className="text-danger text-xs hover:underline">x</button>
-                  </form>
+                  <ConfirmDelete action={deleteActivity.bind(null, a.id)} label="x" message="Delete this activity?" />
                 </div>
               </div>
             ))}

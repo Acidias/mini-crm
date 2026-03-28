@@ -6,6 +6,7 @@ import { deleteEmail } from "@/actions/emails";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
 import SortHeader from "@/components/sort-header";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export const dynamic = "force-dynamic";
 
@@ -135,9 +136,7 @@ export default async function EmailsPage({
                 </Link>
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <span className="text-xs text-muted">{timeAgo(e.createdAt)}</span>
-                  <form action={deleteEmail.bind(null, e.id)}>
-                    <button type="submit" className="text-danger text-xs hover:underline">Delete</button>
-                  </form>
+                  <ConfirmDelete action={deleteEmail.bind(null, e.id)} />
                 </div>
               </div>
             );

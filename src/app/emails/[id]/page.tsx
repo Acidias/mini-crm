@@ -5,6 +5,7 @@ import { emails, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { markEmailRead, deleteEmail } from "@/actions/emails";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export default async function ViewEmailPage({
   params,
@@ -114,11 +115,7 @@ export default async function ViewEmailPage({
               {isInbound ? "Reply" : "Send Again"}
             </Link>
           </div>
-          <form action={deleteEmail.bind(null, email.id)}>
-            <button type="submit" className="text-danger text-sm hover:underline">
-              Delete
-            </button>
-          </form>
+          <ConfirmDelete action={deleteEmail.bind(null, email.id)} className="text-danger text-sm hover:underline" />
         </div>
       </div>
     </div>

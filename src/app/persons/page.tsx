@@ -7,6 +7,7 @@ import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
 import SortHeader from "@/components/sort-header";
 import BulkActions from "@/components/bulk-actions";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export const dynamic = "force-dynamic";
 
@@ -164,9 +165,7 @@ export default async function PersonsPage({
                             <button type="submit" className="text-success text-xs hover:underline">Contacted</button>
                           </form>
                           <Link href={`/persons/${p.id}/edit`} className="text-accent text-xs hover:underline">Edit</Link>
-                          <form action={deletePerson.bind(null, p.id)}>
-                            <button type="submit" className="text-danger text-xs hover:underline">Delete</button>
-                          </form>
+                          <ConfirmDelete action={deletePerson.bind(null, p.id)} />
                         </div>
                       </td>
                     </tr>

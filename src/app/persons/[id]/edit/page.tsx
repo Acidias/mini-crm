@@ -4,6 +4,7 @@ import { persons, companies } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updatePerson, deletePerson, markAsContacted } from "@/actions/persons";
+import ConfirmDelete from "@/components/confirm-delete";
 
 function timeAgo(date: Date | null): string {
   if (!date) return "Never";
@@ -170,14 +171,7 @@ export default async function EditPersonPage({
               Cancel
             </Link>
           </div>
-          <form action={deletePerson.bind(null, person.id)}>
-            <button
-              type="submit"
-              className="text-danger text-sm hover:underline"
-            >
-              Delete
-            </button>
-          </form>
+          <ConfirmDelete action={deletePerson.bind(null, person.id)} className="text-danger text-sm hover:underline" />
         </div>
       </form>
     </div>

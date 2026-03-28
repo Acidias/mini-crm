@@ -4,6 +4,7 @@ import { todos, persons, events } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateTodo, deleteTodo, toggleTodo } from "@/actions/todos";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export default async function EditTodoPage({
   params,
@@ -130,11 +131,7 @@ export default async function EditTodoPage({
               Cancel
             </Link>
           </div>
-          <form action={deleteTodo.bind(null, todo.id)}>
-            <button type="submit" className="text-danger text-sm hover:underline">
-              Delete
-            </button>
-          </form>
+          <ConfirmDelete action={deleteTodo.bind(null, todo.id)} className="text-danger text-sm hover:underline" />
         </div>
       </form>
     </div>

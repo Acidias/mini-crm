@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { events, companies } from "@/db/schema";
 import { desc, eq, gte, lt, asc } from "drizzle-orm";
 import { deleteEvent, updateEventStatus } from "@/actions/events";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export const dynamic = "force-dynamic";
 
@@ -114,11 +115,7 @@ export default async function EventsPage() {
                         <Link href={`/events/${e.id}/edit`} className="text-accent text-xs hover:underline">
                           Edit
                         </Link>
-                        <form action={deleteEvent.bind(null, e.id)}>
-                          <button type="submit" className="text-danger text-xs hover:underline">
-                            Delete
-                          </button>
-                        </form>
+                        <ConfirmDelete action={deleteEvent.bind(null, e.id)} />
                       </div>
                     </td>
                   </tr>
@@ -175,11 +172,7 @@ export default async function EventsPage() {
                         <Link href={`/events/${e.id}/edit`} className="text-accent text-xs hover:underline">
                           Edit
                         </Link>
-                        <form action={deleteEvent.bind(null, e.id)}>
-                          <button type="submit" className="text-danger text-xs hover:underline">
-                            Delete
-                          </button>
-                        </form>
+                        <ConfirmDelete action={deleteEvent.bind(null, e.id)} />
                       </div>
                     </td>
                   </tr>

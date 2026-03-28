@@ -4,6 +4,7 @@ import { companies, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateCompany, deleteCompany } from "@/actions/companies";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export default async function EditCompanyPage({
   params,
@@ -143,14 +144,7 @@ export default async function EditCompanyPage({
               Cancel
             </Link>
           </div>
-          <form action={deleteCompany.bind(null, company.id)}>
-            <button
-              type="submit"
-              className="text-danger text-sm hover:underline"
-            >
-              Delete
-            </button>
-          </form>
+          <ConfirmDelete action={deleteCompany.bind(null, company.id)} className="text-danger text-sm hover:underline" />
         </div>
       </form>
     </div>

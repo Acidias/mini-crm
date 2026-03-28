@@ -6,6 +6,7 @@ import { deleteTodo, toggleTodo } from "@/actions/todos";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
 import BulkActions from "@/components/bulk-actions";
+import ConfirmDelete from "@/components/confirm-delete";
 
 export const dynamic = "force-dynamic";
 
@@ -99,7 +100,7 @@ export default async function TodosPage({
                   </div>
                   <div className="flex gap-2 items-center flex-shrink-0">
                     <Link href={`/todos/${t.id}/edit`} className="text-accent text-xs hover:underline">Edit</Link>
-                    <form action={deleteTodo.bind(null, t.id)}><button type="submit" className="text-danger text-xs hover:underline">Delete</button></form>
+                    <ConfirmDelete action={deleteTodo.bind(null, t.id)} />
                   </div>
                 </div>
               ))}
@@ -119,7 +120,7 @@ export default async function TodosPage({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm line-through text-muted truncate">{t.title}</p>
                     </div>
-                    <form action={deleteTodo.bind(null, t.id)}><button type="submit" className="text-danger text-xs hover:underline">Delete</button></form>
+                    <ConfirmDelete action={deleteTodo.bind(null, t.id)} />
                   </div>
                 ))}
               </div>
