@@ -14,25 +14,29 @@ Contact and company management system with Google OAuth authentication.
 - GitHub: https://github.com/Acidias/mini-crm
 
 ## Structure
-- `src/db/schema.ts` - Database schema with indexes (companies, persons, events, todos, emails, activities)
+- `src/db/schema.ts` - Database schema with indexes (companies, persons, events, todos, emails, activities, tags, entityTags)
 - `src/db/index.ts` - Drizzle client connection
 - `src/auth.ts` - Auth.js config with Google provider + email allowlist
 - `src/middleware.ts` - Protects all routes, redirects to /login
 - `src/lib/resend.ts` - Resend client, FROM_ADDRESSES config
-- `src/components/` - Shared UI: search-input, pagination, sort-header, bulk-actions
-- `src/actions/` - Server actions: companies, persons, events, todos, emails, activities
-- `src/app/` - Pages: dashboard, emails, companies, persons, events, todos, calendar
+- `src/lib/validation.ts` - Server-side validation helpers (email, URL, required, clean)
+- `src/components/` - Shared UI: search-input, pagination, sort-header, bulk-actions, confirm-delete, tag-manager, duplicate-warning
+- `src/actions/` - Server actions: companies, persons, events, todos, emails, activities, tags
+- `src/app/` - Pages: dashboard, emails, companies, persons, events, todos, calendar, trash, login
 - `src/app/api/bulk/` - Bulk delete/update API routes (persons, companies, todos)
+- `src/app/api/check-duplicate/` - Duplicate detection API (persons by email, companies by name)
 - `src/app/api/webhooks/resend/` - Inbound email webhook
 - `src/scripts/seed.ts` - Database seed script with example data
 
 ## Database
-- **companies**: name, website, industry, email, phone, address, notes
-- **persons**: name, email, phone, position, notes, companyId (FK), lastContactedAt
+- **companies**: name, website, industry, email, phone, address, notes, deletedAt (soft delete)
+- **persons**: name, email, phone, position, notes, companyId (FK), lastContactedAt, deletedAt (soft delete)
 - **events**: name, date, location, description, companyId (FK), status
 - **todos**: title, dueDate, done, notes, personId (FK), eventId (FK)
 - **emails**: resendId, direction, from/to, subject, body (text+html), personId (FK), read
 - **activities**: type (call/meeting/note/email/other), title, notes, personId (FK), companyId (FK)
+- **tags**: name (unique), colour
+- **entityTags**: tagId (FK), personId (FK), companyId (FK)
 - Indexes on all FKs, email, name, date, done columns
 - Schema pushed with `npx drizzle-kit push` (needs DATABASE_URL env var)
 
@@ -40,12 +44,17 @@ Contact and company management system with Google OAuth authentication.
 - Google OAuth login, restricted to ALLOWED_EMAILS
 - Dashboard with stats, follow-up reminders, upcoming events, pending todos
 - Search, column sorting, pagination on all list pages
-- Company and person detail pages with full profile (info, linked items, activity log)
+- Company and person detail pages with full profile (info, linked items, activity log, tags)
 - Activity log (call notes, meeting notes, etc.) on person and company detail pages
+- Tags/labels with colours - assign to persons and companies
 - Bulk actions: multi-select delete (persons, companies), bulk mark done/pending (todos)
 - Email system: compose with from-address dropdown, inbox, sent, view with reply
 - Events with upcoming/past, status management, calendar view
 - To-do list linked to persons and events
+- Confirmation dialogs on all delete actions
+- Duplicate detection on person create (email) and company create (name)
+- Server-side form validation (email format, URL format, required fields)
+- Soft delete for persons and companies with Trash page (restore or permanent delete)
 
 ## Email Setup
 - Resend domain: foundry70.co.uk (sending + receiving enabled)
