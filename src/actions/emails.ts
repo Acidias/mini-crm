@@ -5,7 +5,7 @@ import { emails, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { resend, EMAIL_FROM } from "@/lib/resend";
+import { resend, DEFAULT_FROM, FROM_ADDRESSES } from "@/lib/resend";
 
 async function findPersonByEmail(email: string) {
   const [person] = await db
@@ -20,9 +20,11 @@ export async function sendEmail(formData: FormData) {
   const to = formData.get("to") as string;
   const subject = formData.get("subject") as string;
   const body = formData.get("body") as string;
+  const fromRaw = formData.get("from") as string;
+  const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
 
   const { data, error } = await resend.emails.send({
-    from: EMAIL_FROM,
+    from,
     to: [to],
     subject: subject,
     text: body,
@@ -37,7 +39,7 @@ export async function sendEmail(formData: FormData) {
   await db.insert(emails).values({
     resendId: data?.id || null,
     direction: "outbound",
-    fromAddress: EMAIL_FROM,
+    fromAddress: from,
     toAddress: to,
     subject: subject,
     bodyText: body,

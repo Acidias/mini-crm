@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/db";
 import { persons } from "@/db/schema";
 import { sendEmail } from "@/actions/emails";
+import { FROM_ADDRESSES } from "@/lib/resend";
 
 export default async function ComposeEmailPage({
   searchParams,
@@ -25,12 +26,25 @@ export default async function ComposeEmailPage({
           &larr; Back to Emails
         </Link>
         <h1 className="text-2xl font-bold mt-2">Compose Email</h1>
-        <p className="text-muted text-sm mt-1">
-          Sending from <span className="font-medium">info@foundry70.co.uk</span>
-        </p>
       </div>
 
       <form action={sendEmail} className="bg-card-bg rounded-xl border border-border p-6 space-y-5">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-1.5">From</label>
+            <select
+              name="from"
+              className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+            >
+              {FROM_ADDRESSES.map((addr) => (
+                <option key={addr} value={addr}>
+                  {addr}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div></div>
+        </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">To *</label>
           <div className="flex gap-2">
