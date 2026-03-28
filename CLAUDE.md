@@ -12,25 +12,32 @@ Simple contact and company management system. No authentication.
 - GitHub: https://github.com/Acidias/mini-crm
 
 ## Structure
-- `src/db/schema.ts` - Database schema (companies + persons tables)
+- `src/db/schema.ts` - Database schema (companies, persons, events, todos)
 - `src/db/index.ts` - Drizzle client connection
-- `src/actions/companies.ts` - Company CRUD server actions (create, update, delete)
-- `src/actions/persons.ts` - Person CRUD + markAsContacted action
-- `src/app/` - Pages: dashboard, companies (list/new/edit), persons (list/new/edit)
+- `src/actions/` - Server actions: companies, persons, events, todos
+- `src/app/` - Pages: dashboard, companies, persons, events, todos, calendar
+- `src/app/calendar/calendar-view.tsx` - Client component for calendar month navigation
+- `src/scripts/seed.ts` - Database seed script with example data
 - `drizzle.config.ts` - Drizzle Kit config for schema push
 
 ## Database
 - **companies**: name, website, industry, email, phone, address, notes
 - **persons**: name, email, phone, position, notes, companyId (FK), lastContactedAt
-- Persons can optionally link to a company (ON DELETE SET NULL)
+- **events**: name, date, location, description, companyId (FK), status
+- **todos**: title, dueDate, done, notes, personId (FK), eventId (FK)
+- All FKs use ON DELETE SET NULL
 - Schema pushed with `npx drizzle-kit push` (needs DATABASE_URL env var)
 
 ## Features
-- Dashboard with stats, follow-up reminders (7d threshold), recent additions
+- Dashboard with stats, follow-up reminders, upcoming events, pending todos, recent additions
 - Companies list with person count, full CRUD
 - Persons list with last contacted status, mark as contacted button, full CRUD
+- Events with upcoming/past sections, status (upcoming/attended/cancelled)
+- To-do list with done/pending, linked to persons and events
+- Monthly calendar showing events and todos with colour-coded badges
 - Sidebar navigation, light gray CRM-style UI
 
 ## Development
 - `npm run dev` to start locally
 - `.env.local` contains DATABASE_URL (not committed)
+- `npx tsx src/scripts/seed.ts` to seed example data (needs DATABASE_URL)

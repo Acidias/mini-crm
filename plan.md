@@ -1,6 +1,6 @@
 # Mini-CRM Plan
 
-## Status: v2 complete - CRM-style overhaul deployed
+## Status: v3 complete - Events, todos, calendar
 
 ## Completed
 
@@ -9,6 +9,7 @@
 - [x] Phase 3: All CRUD pages built
 - [x] Phase 4: GitHub repo + Vercel deployment
 - [x] v2: CRM-style redesign with sidebar, dashboard, contact tracking
+- [x] v3: Events, to-do list, calendar, seed data
 
 ## Links
 
@@ -16,20 +17,18 @@
 - Live: https://mini-crm-rust.vercel.app
 - NeonDB project: noisy-bonus-54925963
 
-## Architecture
-
-- Next.js 16 App Router with server components + server actions
-- Drizzle ORM + @neondatabase/serverless (neon-http driver)
-- Dark sidebar nav, light gray body, white card panels
-- Contact tracking with 7-day follow-up threshold
-
 ## Database
 
 - **companies**: name, website, industry, email, phone, address, notes
 - **persons**: name, email, phone, position, notes, companyId (FK), lastContactedAt
+- **events**: name, date, location, description, companyId (FK), status
+- **todos**: title, dueDate, done, notes, personId (FK), eventId (FK)
 
 ## Pages
 
-- `/` - Dashboard with stats, follow-up list, recent additions
-- `/companies` - List with person counts, add (`/new`), edit (`/[id]/edit`)
-- `/persons` - List with last contacted, mark as contacted, add (`/new`), edit (`/[id]/edit`)
+- `/` - Dashboard with stats, follow-ups, upcoming events, pending todos
+- `/companies` - List with person counts, add, edit
+- `/persons` - List with last contacted, mark as contacted, add, edit
+- `/events` - Upcoming/past split, status management, add, edit
+- `/todos` - Pending/completed split, toggle done, linked to persons/events
+- `/calendar` - Monthly view with events (blue) and todos (amber)

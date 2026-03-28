@@ -60,6 +60,8 @@ export default function RootLayout({
             <NavLink href="/persons" icon="&#9679;" label="Persons" />
             <NavLink href="/companies" icon="&#9670;" label="Companies" />
             <NavLink href="/events" icon="&#9733;" label="Events" />
+            <NavLink href="/todos" icon="&#9745;" label="To-Dos" />
+            <NavLink href="/calendar" icon="&#9776;" label="Calendar" />
           </nav>
           <div className="px-5 py-4 border-t border-white/10">
             <p className="text-xs text-sidebar-text/50">Mini CRM v1.0</p>

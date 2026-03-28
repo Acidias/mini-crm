@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, date } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, timestamp, date, boolean } from "drizzle-orm/pg-core";
 
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
@@ -38,6 +38,22 @@ export const events = pgTable("events", {
     onDelete: "set null",
   }),
   status: varchar("status", { length: 50 }).notNull().default("upcoming"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const todos = pgTable("todos", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 500 }).notNull(),
+  dueDate: date("due_date"),
+  done: boolean("done").notNull().default(false),
+  notes: text("notes"),
+  personId: integer("person_id").references(() => persons.id, {
+    onDelete: "set null",
+  }),
+  eventId: integer("event_id").references(() => events.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

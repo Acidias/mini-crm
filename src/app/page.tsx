@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/db";
-import { companies, persons, events } from "@/db/schema";
+import { companies, persons, events, todos } from "@/db/schema";
 import { count, desc, isNull, lt, sql, gte, asc, eq } from "drizzle-orm";
 
 function timeAgo(date: Date | null): string {
@@ -86,6 +86,20 @@ export default async function Home() {
     .leftJoin(companies, eq(events.companyId, companies.id))
     .where(gte(events.date, today))
     .orderBy(asc(events.date))
+    .limit(5);
+
+  const pendingTodos = await db
+    .select({
+      id: todos.id,
+      title: todos.title,
+      dueDate: todos.dueDate,
+      done: todos.done,
+      personName: persons.name,
+    })
+    .from(todos)
+    .leftJoin(persons, eq(todos.personId, persons.id))
+    .where(eq(todos.done, false))
+    .orderBy(asc(todos.dueDate))
     .limit(5);
 
   return (
@@ -222,6 +236,44 @@ export default async function Home() {
                 }`}>
                   {e.status.charAt(0).toUpperCase() + e.status.slice(1)}
                 </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Pending todos */}
+      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold">Pending To-Dos</h2>
+          <Link href="/todos" className="text-accent text-xs hover:underline">View all</Link>
+        </div>
+        {pendingTodos.length === 0 ? (
+          <p className="text-muted text-sm">No pending tasks.</p>
+        ) : (
+          <div className="space-y-1">
+            {pendingTodos.map((t) => (
+              <div key={t.id} className="flex items-center justify-between py-1.5 border-t border-border first:border-0">
+                <div className="flex items-center gap-2">
+                  <Link href={`/todos/${t.id}/edit`} className="text-accent hover:underline text-sm font-medium">
+                    {t.title}
+                  </Link>
+                  {t.personName && (
+                    <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">
+                      {t.personName}
+                    </span>
+                  )}
+                </div>
+                {t.dueDate && (
+                  <span className={`text-xs ${
+                    t.dueDate < today ? "text-danger font-medium" : "text-muted"
+                  }`}>
+                    {new Date(t.dueDate + "T00:00:00").toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                    })}
+                  </span>
+                )}
               </div>
             ))}
           </div>
