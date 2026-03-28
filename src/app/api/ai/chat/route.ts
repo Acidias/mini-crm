@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
         // Agentic loop
         while (true) {
           const messageStream = anthropic.messages.stream({
-            model: "claude-sonnet-4-20250514",
+            model: "claude-opus-4-20250514",
             max_tokens: 4096,
             system: getSystemPrompt(),
             tools: allTools,
