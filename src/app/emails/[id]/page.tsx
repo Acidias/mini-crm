@@ -1,0 +1,126 @@
+import Link from "next/link";
+import DOMPurify from "isomorphic-dompurify";
+import { db } from "@/db";
+import { emails, persons } from "@/db/schema";
+import { eq } from "drizzle-orm";
+import { notFound } from "next/navigation";
+import { markEmailRead, deleteEmail } from "@/actions/emails";
+
+export default async function ViewEmailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const [email] = await db
+    .select()
+    .from(emails)
+    .where(eq(emails.id, parseInt(id)));
+
+  if (!email) notFound();
+
+  // Mark as read if inbound and unread
+  if (email.direction === "inbound" && !email.read) {
+    await markEmailRead(email.id);
+  }
+
+  // Get linked person if any
+  let linkedPerson: { id: number; name: string } | null = null;
+  if (email.personId) {
+    const [p] = await db
+      .select({ id: persons.id, name: persons.name })
+      .from(persons)
+      .where(eq(persons.id, email.personId));
+    linkedPerson = p || null;
+  }
+
+  const isInbound = email.direction === "inbound";
+  const sanitisedHtml = email.bodyHtml
+    ? DOMPurify.sanitize(email.bodyHtml)
+    : null;
+
+  return (
+    <div className="max-w-3xl">
+      <div className="mb-6">
+        <Link href="/emails" className="text-muted text-sm hover:text-foreground">
+          &larr; Back to Emails
+        </Link>
+      </div>
+
+      <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+        {/* Header */}
+        <div className="px-6 py-4 border-b border-border">
+          <div className="flex items-center justify-between mb-2">
+            <h1 className="text-lg font-bold">{email.subject || "(No subject)"}</h1>
+            <span
+              className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                isInbound
+                  ? "bg-green-100 text-green-700"
+                  : "bg-blue-100 text-blue-700"
+              }`}
+            >
+              {isInbound ? "Received" : "Sent"}
+            </span>
+          </div>
+          <div className="text-sm text-muted space-y-1">
+            <p>
+              <span className="font-medium text-foreground">From:</span> {email.fromAddress}
+            </p>
+            <p>
+              <span className="font-medium text-foreground">To:</span> {email.toAddress}
+            </p>
+            <p>
+              <span className="font-medium text-foreground">Date:</span>{" "}
+              {email.createdAt.toLocaleString("en-GB", {
+                dateStyle: "long",
+                timeStyle: "short",
+              })}
+            </p>
+            {linkedPerson && (
+              <p>
+                <span className="font-medium text-foreground">Contact:</span>{" "}
+                <Link
+                  href={`/persons/${linkedPerson.id}/edit`}
+                  className="text-accent hover:underline"
+                >
+                  {linkedPerson.name}
+                </Link>
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-5">
+          {sanitisedHtml ? (
+            <div
+              className="prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: sanitisedHtml }}
+            />
+          ) : (
+            <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
+              {email.bodyText || "(Empty message)"}
+            </pre>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="px-6 py-3 border-t border-border bg-gray-50/50 flex items-center justify-between">
+          <div className="flex gap-2">
+            <Link
+              href={`/emails/compose?to=${encodeURIComponent(isInbound ? email.fromAddress : email.toAddress)}`}
+              className="bg-accent text-white px-4 py-1.5 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+            >
+              {isInbound ? "Reply" : "Send Again"}
+            </Link>
+          </div>
+          <form action={deleteEmail.bind(null, email.id)}>
+            <button type="submit" className="text-danger text-sm hover:underline">
+              Delete
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}

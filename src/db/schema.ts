@@ -42,6 +42,22 @@ export const events = pgTable("events", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+export const emails = pgTable("emails", {
+  id: serial("id").primaryKey(),
+  resendId: varchar("resend_id", { length: 255 }),
+  direction: varchar("direction", { length: 10 }).notNull(), // "inbound" or "outbound"
+  fromAddress: varchar("from_address", { length: 255 }).notNull(),
+  toAddress: varchar("to_address", { length: 255 }).notNull(),
+  subject: varchar("subject", { length: 500 }),
+  bodyText: text("body_text"),
+  bodyHtml: text("body_html"),
+  personId: integer("person_id").references(() => persons.id, {
+    onDelete: "set null",
+  }),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const todos = pgTable("todos", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 500 }).notNull(),

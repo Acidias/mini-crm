@@ -71,14 +71,24 @@ export default async function EditPersonPage({
             {timeAgo(person.lastContactedAt)}
           </p>
         </div>
-        <form action={markAsContacted.bind(null, person.id)}>
-          <button
-            type="submit"
-            className="bg-success text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors"
-          >
-            Mark as Contacted
-          </button>
-        </form>
+        <div className="flex gap-2">
+          {person.email && (
+            <Link
+              href={`/emails/compose?to=${encodeURIComponent(person.email)}`}
+              className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+            >
+              Send Email
+            </Link>
+          )}
+          <form action={markAsContacted.bind(null, person.id)}>
+            <button
+              type="submit"
+              className="bg-success text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition-colors"
+            >
+              Mark as Contacted
+            </button>
+          </form>
+        </div>
       </div>
 
       <form
