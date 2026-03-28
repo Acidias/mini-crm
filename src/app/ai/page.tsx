@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 
 type ToolCall = {
   id: string;
@@ -320,7 +321,9 @@ export default function AIChatPage() {
               )}
               {/* Text content */}
               {msg.content && (
-                <div className="whitespace-pre-wrap">{msg.content}</div>
+                <div className={msg.role === "user" ? "whitespace-pre-wrap" : "prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5 prose-headings:my-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none"}>
+                    {msg.role === "user" ? msg.content : <ReactMarkdown>{msg.content}</ReactMarkdown>}
+                  </div>
               )}
             </div>
           </div>
