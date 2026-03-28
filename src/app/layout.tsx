@@ -62,6 +62,7 @@ export default async function RootLayout({
               </div>
               <nav className="flex-1 px-3 space-y-1">
                 <NavLink href="/" icon="&#9632;" label="Dashboard" />
+                <NavLink href="/ai" icon="&#10023;" label="AI Chat" />
                 <NavLink href="/emails" icon="&#9993;" label="Emails" />
                 <NavLink href="/persons" icon="&#9679;" label="Persons" />
                 <NavLink href="/companies" icon="&#9670;" label="Companies" />

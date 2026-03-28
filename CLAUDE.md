@@ -20,9 +20,11 @@ Contact and company management system with Google OAuth authentication.
 - `src/middleware.ts` - Protects all routes, redirects to /login
 - `src/lib/resend.ts` - Resend client, FROM_ADDRESSES config
 - `src/lib/validation.ts` - Server-side validation helpers (email, URL, required, clean)
+- `src/lib/ai/` - AI chat: system-prompt.ts, tools.ts (31 tool schemas), tool-executor.ts (DB operations)
 - `src/components/` - Shared UI: search-input, pagination, sort-header, bulk-actions, confirm-delete, tag-manager, duplicate-warning
 - `src/actions/` - Server actions: companies, persons, events, todos, emails, activities, tags
-- `src/app/` - Pages: dashboard, emails, companies, persons, events, todos, calendar, trash, login
+- `src/app/` - Pages: dashboard, ai chat, emails, companies, persons, events, todos, calendar, trash, login
+- `src/app/api/ai/chat/` - Streaming AI chat endpoint with agentic tool-use loop
 - `src/app/api/bulk/` - Bulk delete/update API routes (persons, companies, todos)
 - `src/app/api/check-duplicate/` - Duplicate detection API (persons by email, companies by name)
 - `src/app/api/webhooks/resend/` - Inbound email webhook
@@ -48,7 +50,8 @@ Contact and company management system with Google OAuth authentication.
 - Activity log (call notes, meeting notes, etc.) on person and company detail pages
 - Tags/labels with colours - assign to persons and companies
 - Bulk actions: multi-select delete (persons, companies), bulk mark done/pending (todos)
-- Email system: compose with from-address dropdown, inbox, sent, view with reply
+- AI chat assistant (Claude API) with 31 tools covering all CRUD operations, streaming responses
+- Email system: compose with from-address dropdown, inbox, sent, drafts tab, view with reply
 - Events with upcoming/past, status management, calendar view
 - To-do list linked to persons and events
 - Confirmation dialogs on all delete actions
