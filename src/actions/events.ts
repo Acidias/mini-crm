@@ -45,5 +45,5 @@ export async function updateEventStatus(id: number, status: string) {
 
 export async function deleteEvent(id: number) {
   await db.delete(events).where(eq(events.id, id));
-  revalidatePath("/events");
+  redirect("/events");
 }

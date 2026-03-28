@@ -48,5 +48,5 @@ export async function toggleTodo(id: number, done: boolean) {
 
 export async function deleteTodo(id: number) {
   await db.delete(todos).where(eq(todos.id, id));
-  revalidatePath("/todos");
+  redirect("/todos");
 }

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/db";
-import { companies, persons, events, emails, todos, activities } from "@/db/schema";
+import { companies, persons, events, emails, activities } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { createActivity, deleteActivity } from "@/actions/activities";
@@ -35,7 +35,6 @@ export default async function CompanyDetailPage({
 
   const companyPersons = await db.select().from(persons).where(eq(persons.companyId, company.id));
   const companyEvents = await db.select().from(events).where(eq(events.companyId, company.id)).orderBy(desc(events.date));
-  const companyTodos = await db.select().from(todos).where(eq(todos.personId, company.id));
   const companyActivities = await db.select().from(activities).where(eq(activities.companyId, company.id)).orderBy(desc(activities.createdAt));
 
   // Get emails for all persons linked to this company

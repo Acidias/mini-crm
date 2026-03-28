@@ -129,24 +129,24 @@ export default async function EditCompanyPage({
             className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
           />
         </div>
-        <div className="flex items-center justify-between pt-2">
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="bg-accent text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
-            >
-              Update Company
-            </button>
-            <Link
-              href="/companies"
-              className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </Link>
-          </div>
-          <ConfirmDelete action={deleteCompany.bind(null, company.id)} className="text-danger text-sm hover:underline" />
+        <div className="flex gap-3 pt-2">
+          <button
+            type="submit"
+            className="bg-accent text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+          >
+            Update Company
+          </button>
+          <Link
+            href="/companies"
+            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+          >
+            Cancel
+          </Link>
         </div>
       </form>
+      <div className="flex justify-end mt-3">
+        <ConfirmDelete action={deleteCompany.bind(null, company.id)} className="text-danger text-sm hover:underline" />
+      </div>
     </div>
   );
 }

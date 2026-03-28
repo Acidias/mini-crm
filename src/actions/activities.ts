@@ -21,6 +21,10 @@ export async function createActivity(formData: FormData) {
 }
 
 export async function deleteActivity(id: number) {
+  // Look up the activity to know which detail pages to revalidate
+  const [activity] = await db.select().from(activities).where(eq(activities.id, id));
   await db.delete(activities).where(eq(activities.id, id));
+  if (activity?.personId) revalidatePath(`/persons/${activity.personId}`);
+  if (activity?.companyId) revalidatePath(`/companies/${activity.companyId}`);
   revalidatePath("/");
 }
