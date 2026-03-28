@@ -8,7 +8,8 @@ Simple contact and company management system. No authentication.
 - Next.js 16 (App Router, server components + server actions)
 - Drizzle ORM + @neondatabase/serverless (neon-http driver)
 - PostgreSQL on NeonDB (project: noisy-bonus-54925963, org: org-late-tooth-96431301)
-- Deployed to Vercel via GitHub auto-deploy
+- Deployed to Vercel via GitHub auto-deploy (https://mini-crm-rust.vercel.app)
+- GitHub: https://github.com/Acidias/mini-crm
 
 ## Structure
 - `src/db/schema.ts` - Database schema (companies + persons tables)
