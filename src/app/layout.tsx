@@ -68,6 +68,7 @@ export default async function RootLayout({
                 <NavLink href="/events" icon="&#9733;" label="Events" />
                 <NavLink href="/todos" icon="&#9745;" label="To-Dos" />
                 <NavLink href="/calendar" icon="&#9776;" label="Calendar" />
+                <NavLink href="/trash" icon="&#9851;" label="Trash" />
               </nav>
               <div className="px-4 py-4 border-t border-white/10">
                 <p className="text-xs text-sidebar-text truncate mb-2">

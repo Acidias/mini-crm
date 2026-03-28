@@ -5,7 +5,9 @@ import { eq, desc, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { markAsContacted } from "@/actions/persons";
 import { createActivity, deleteActivity } from "@/actions/activities";
+import { getAllTags, getTagsForPerson } from "@/actions/tags";
 import ConfirmDelete from "@/components/confirm-delete";
+import TagManager from "@/components/tag-manager";
 
 function timeAgo(date: Date | null): string {
   if (!date) return "Never";
@@ -54,6 +56,9 @@ export default async function PersonDetailPage({
     .where(eq(activities.personId, person.id))
     .orderBy(desc(activities.createdAt));
 
+  const personTags = await getTagsForPerson(person.id);
+  const allTagsList = await getAllTags();
+
   const isStale = !person.lastContactedAt || Date.now() - person.lastContactedAt.getTime() > 7 * 24 * 60 * 60 * 1000;
 
   return (
@@ -83,6 +88,12 @@ export default async function PersonDetailPage({
             </Link>
           </div>
         </div>
+      </div>
+
+      {/* Tags */}
+      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+        <h2 className="font-semibold mb-3 text-sm">Tags</h2>
+        <TagManager entityType="person" entityId={person.id} currentTags={personTags} allTags={allTagsList} />
       </div>
 
       {/* Info + Contact status */}

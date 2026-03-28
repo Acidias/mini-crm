@@ -4,7 +4,9 @@ import { companies, persons, events, emails, todos, activities } from "@/db/sche
 import { eq, desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { createActivity, deleteActivity } from "@/actions/activities";
+import { getAllTags, getTagsForCompany } from "@/actions/tags";
 import ConfirmDelete from "@/components/confirm-delete";
+import TagManager from "@/components/tag-manager";
 
 function timeAgo(date: Date): string {
   const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
@@ -27,6 +29,9 @@ export default async function CompanyDetailPage({
   const { id } = await params;
   const [company] = await db.select().from(companies).where(eq(companies.id, parseInt(id)));
   if (!company) notFound();
+
+  const companyTags = await getTagsForCompany(company.id);
+  const allTagsList = await getAllTags();
 
   const companyPersons = await db.select().from(persons).where(eq(persons.companyId, company.id));
   const companyEvents = await db.select().from(events).where(eq(events.companyId, company.id)).orderBy(desc(events.date));
@@ -57,6 +62,12 @@ export default async function CompanyDetailPage({
             Edit
           </Link>
         </div>
+      </div>
+
+      {/* Tags */}
+      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+        <h2 className="font-semibold mb-3 text-sm">Tags</h2>
+        <TagManager entityType="company" entityId={company.id} currentTags={companyTags} allTags={allTagsList} />
       </div>
 
       {/* Info card */}

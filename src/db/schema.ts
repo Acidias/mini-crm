@@ -1,4 +1,4 @@
-import { pgTable, serial, varchar, text, integer, timestamp, date, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, serial, varchar, text, integer, timestamp, date, boolean, index, uniqueIndex } from "drizzle-orm/pg-core";
 
 export const companies = pgTable("companies", {
   id: serial("id").primaryKey(),
@@ -9,6 +9,7 @@ export const companies = pgTable("companies", {
   phone: varchar("phone", { length: 100 }),
   address: varchar("address", { length: 500 }),
   notes: text("notes"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -24,6 +25,7 @@ export const persons = pgTable("persons", {
     onDelete: "set null",
   }),
   lastContactedAt: timestamp("last_contacted_at"),
+  deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 }, (table) => [
@@ -103,4 +105,23 @@ export const activities = pgTable("activities", {
 }, (table) => [
   index("activities_person_id_idx").on(table.personId),
   index("activities_company_id_idx").on(table.companyId),
+]);
+
+export const tags = pgTable("tags", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+  colour: varchar("colour", { length: 7 }).notNull().default("#6b7280"),
+}, (table) => [
+  uniqueIndex("tags_name_idx").on(table.name),
+]);
+
+export const entityTags = pgTable("entity_tags", {
+  id: serial("id").primaryKey(),
+  tagId: integer("tag_id").references(() => tags.id, { onDelete: "cascade" }).notNull(),
+  personId: integer("person_id").references(() => persons.id, { onDelete: "cascade" }),
+  companyId: integer("company_id").references(() => companies.id, { onDelete: "cascade" }),
+}, (table) => [
+  index("entity_tags_tag_id_idx").on(table.tagId),
+  index("entity_tags_person_id_idx").on(table.personId),
+  index("entity_tags_company_id_idx").on(table.companyId),
 ]);

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies, persons } from "@/db/schema";
-import { desc, eq, asc, ilike, or, count, sql } from "drizzle-orm";
+import { desc, eq, asc, ilike, or, count, sql, isNull, and } from "drizzle-orm";
 import { deleteCompany } from "@/actions/companies";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
@@ -22,7 +22,7 @@ export default async function CompaniesPage({
   const sortOrder = params.order || "asc";
   const page = Math.max(1, parseInt(params.page || "1"));
 
-  const whereClause = query
+  const searchFilter = query
     ? or(
         ilike(companies.name, `%${query}%`),
         ilike(companies.industry, `%${query}%`),
@@ -30,6 +30,9 @@ export default async function CompaniesPage({
         ilike(companies.website, `%${query}%`)
       )
     : undefined;
+  const whereClause = searchFilter
+    ? and(isNull(companies.deletedAt), searchFilter)
+    : isNull(companies.deletedAt);
 
   const [totalResult] = await db.select({ value: count() }).from(companies).where(whereClause);
   const total = totalResult.value;

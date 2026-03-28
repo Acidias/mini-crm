@@ -2,6 +2,7 @@ import Link from "next/link";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
 import { createPerson } from "@/actions/persons";
+import DuplicateWarning from "@/components/duplicate-warning";
 
 export default async function NewPersonPage() {
   const allCompanies = await db.select().from(companies);
@@ -48,11 +49,7 @@ export default async function NewPersonPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Email</label>
-            <input
-              name="email"
-              type="email"
-              className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
+            <DuplicateWarning type="person" field="email" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Phone</label>

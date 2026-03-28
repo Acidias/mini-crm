@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createCompany } from "@/actions/companies";
+import DuplicateWarning from "@/components/duplicate-warning";
 
 export default function NewCompanyPage() {
   return (
@@ -14,11 +15,7 @@ export default function NewCompanyPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-1.5">Company Name *</label>
-            <input
-              name="name"
-              required
-              className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            />
+            <DuplicateWarning type="company" field="name" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Industry</label>
