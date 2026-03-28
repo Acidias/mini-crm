@@ -545,24 +545,45 @@ export default function AIChatPage() {
 }
 
 function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
-  const [expanded, setExpanded] = useState(false);
+  const [showRaw, setShowRaw] = useState(false);
   const label = TOOL_LABELS[toolCall.name] || toolCall.name;
   const hasResult = !!toolCall.result;
   const isSuccess = toolCall.result?.success;
 
+  const entities = hasResult && isSuccess ? extractEntities(toolCall.name, toolCall.result!.data) : [];
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 text-xs overflow-hidden">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-gray-50"
-      >
+      <div className="flex items-center gap-2 px-3 py-1.5">
         <span className={`w-1.5 h-1.5 rounded-full ${
           !hasResult ? "bg-amber-400 animate-pulse" : isSuccess ? "bg-green-500" : "bg-red-500"
         }`} />
         <span className="font-medium text-gray-700">{label}</span>
-        <span className="text-gray-400 ml-auto">{expanded ? "\u25B2" : "\u25BC"}</span>
-      </button>
-      {expanded && (
+        {hasResult && (
+          <button onClick={() => setShowRaw(!showRaw)} className="text-gray-400 ml-auto hover:text-gray-600">
+            {showRaw ? "\u25B2" : "\u25BC"}
+          </button>
+        )}
+      </div>
+
+      {/* Entity cards */}
+      {entities.length > 0 && (
+        <div className="px-2 pb-2 flex flex-wrap gap-1.5">
+          {entities.map((entity, i) => (
+            <EntityCard key={i} entity={entity} />
+          ))}
+        </div>
+      )}
+
+      {/* Error display */}
+      {hasResult && !isSuccess && toolCall.result?.error && (
+        <div className="px-3 py-1.5 border-t border-red-100 bg-red-50 text-red-600">
+          {toolCall.result.error}
+        </div>
+      )}
+
+      {/* Raw JSON toggle */}
+      {showRaw && (
         <div className="px-3 py-2 border-t border-gray-100 space-y-1.5">
           <div>
             <p className="text-gray-400 font-medium">Input:</p>
@@ -574,12 +595,172 @@ function ToolCallCard({ toolCall }: { toolCall: ToolCall }) {
             <div>
               <p className="text-gray-400 font-medium">Result:</p>
               <pre className="text-gray-600 whitespace-pre-wrap break-all max-h-40 overflow-y-auto">
-                {JSON.stringify(toolCall.result, null, 2)}
+                {JSON.stringify(toolCall.result.data, null, 2)}
               </pre>
             </div>
           )}
         </div>
       )}
     </div>
+  );
+}
+
+type Entity = {
+  type: "person" | "company" | "event" | "todo" | "email" | "activity" | "tag";
+  id: number;
+  label: string;
+  subtitle?: string;
+  href: string;
+};
+
+function extractEntities(toolName: string, data: unknown): Entity[] {
+  if (!data) return [];
+
+  // Single entity from _get or _create tools
+  if (toolName.endsWith("_get")) {
+    const d = data as Record<string, unknown>;
+    if (toolName === "persons_get" && d.person) return [personEntity(d.person as Record<string, unknown>)];
+    if (toolName === "companies_get" && d.company) return [companyEntity(d.company as Record<string, unknown>)];
+    if (toolName === "events_get" && d.event) return [eventEntity(d.event as Record<string, unknown>)];
+    if (toolName === "todos_get" && d.todo) return [todoEntity(d.todo as Record<string, unknown>)];
+    if (toolName === "emails_get" && d.email) return [emailEntity(d.email as Record<string, unknown>)];
+  }
+
+  // Created/updated entities
+  if (toolName.endsWith("_create") || toolName.endsWith("_update") || toolName === "persons_mark_contacted") {
+    const d = data as Record<string, unknown>;
+    if (d.id && typeof d.id === "number") {
+      if (toolName.startsWith("persons")) return [personEntity(d)];
+      if (toolName.startsWith("companies")) return [companyEntity(d)];
+      if (toolName.startsWith("events")) return [eventEntity(d)];
+      if (toolName.startsWith("todos")) return [todoEntity(d)];
+      if (toolName.startsWith("emails")) return [emailEntity(d)];
+    }
+  }
+
+  // Toggle returns the todo
+  if (toolName === "todos_toggle") {
+    const d = data as Record<string, unknown>;
+    if (d.id) return [todoEntity(d)];
+  }
+
+  // List tools return arrays
+  if (toolName.endsWith("_list")) {
+    const items = Array.isArray(data) ? data : [];
+    if (toolName === "persons_list") return items.slice(0, 10).map((d) => personEntity(d));
+    if (toolName === "companies_list") return items.slice(0, 10).map((d) => companyEntity(d));
+    if (toolName === "events_list") return items.slice(0, 10).map((d) => eventEntity(d));
+    if (toolName === "todos_list") return items.slice(0, 10).map((d) => todoEntity(d));
+    if (toolName === "emails_list") return items.slice(0, 10).map((d) => emailEntity(d));
+    if (toolName === "tags_list") return items.slice(0, 20).map((d) => tagEntity(d));
+  }
+
+  // Send email returns the email record
+  if (toolName === "emails_send" || toolName === "emails_save_draft") {
+    const d = data as Record<string, unknown>;
+    if (d.id) return [emailEntity(d)];
+  }
+
+  return [];
+}
+
+function personEntity(d: Record<string, unknown>): Entity {
+  const parts = [d.position, d.companyName].filter(Boolean);
+  return {
+    type: "person",
+    id: d.id as number,
+    label: d.name as string,
+    subtitle: parts.length > 0 ? parts.join(" at ") : (d.email as string) || undefined,
+    href: `/persons/${d.id}`,
+  };
+}
+
+function companyEntity(d: Record<string, unknown>): Entity {
+  return {
+    type: "company",
+    id: d.id as number,
+    label: d.name as string,
+    subtitle: (d.industry as string) || (d.website as string) || undefined,
+    href: `/companies/${d.id}`,
+  };
+}
+
+function eventEntity(d: Record<string, unknown>): Entity {
+  return {
+    type: "event",
+    id: d.id as number,
+    label: d.name as string,
+    subtitle: [d.date, d.location].filter(Boolean).join(" - ") || undefined,
+    href: `/events/${d.id}/edit`,
+  };
+}
+
+function todoEntity(d: Record<string, unknown>): Entity {
+  return {
+    type: "todo",
+    id: d.id as number,
+    label: d.title as string,
+    subtitle: d.dueDate ? `Due ${d.dueDate}` : d.done ? "Done" : "Pending",
+    href: `/todos/${d.id}/edit`,
+  };
+}
+
+function emailEntity(d: Record<string, unknown>): Entity {
+  const dir = d.direction === "inbound" ? "From" : "To";
+  const addr = d.direction === "inbound" ? d.fromAddress : d.toAddress;
+  return {
+    type: "email",
+    id: d.id as number,
+    label: (d.subject as string) || "(No subject)",
+    subtitle: addr ? `${dir}: ${addr}` : undefined,
+    href: d.status === "draft" ? `/emails/compose?draft=${d.id}` : `/emails/${d.id}`,
+  };
+}
+
+function tagEntity(d: Record<string, unknown>): Entity {
+  return {
+    type: "tag",
+    id: d.id as number,
+    label: d.name as string,
+    href: "#",
+  };
+}
+
+const TYPE_STYLES: Record<string, { bg: string; icon: string }> = {
+  person: { bg: "bg-blue-50 border-blue-200 hover:bg-blue-100", icon: "\u25CF" },
+  company: { bg: "bg-purple-50 border-purple-200 hover:bg-purple-100", icon: "\u25C6" },
+  event: { bg: "bg-amber-50 border-amber-200 hover:bg-amber-100", icon: "\u2605" },
+  todo: { bg: "bg-green-50 border-green-200 hover:bg-green-100", icon: "\u2611" },
+  email: { bg: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100", icon: "\u2709" },
+  tag: { bg: "bg-gray-50 border-gray-200", icon: "\u25CF" },
+  activity: { bg: "bg-gray-50 border-gray-200", icon: "\u25CB" },
+};
+
+function EntityCard({ entity }: { entity: Entity }) {
+  const style = TYPE_STYLES[entity.type] || TYPE_STYLES.activity;
+
+  if (entity.type === "tag") {
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
+        {entity.label}
+      </span>
+    );
+  }
+
+  return (
+    <a
+      href={entity.href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg border text-[11px] transition-colors ${style.bg}`}
+    >
+      <span className="text-xs">{style.icon}</span>
+      <div className="min-w-0">
+        <span className="font-medium text-gray-800 block truncate max-w-[200px]">{entity.label}</span>
+        {entity.subtitle && (
+          <span className="text-gray-500 block truncate max-w-[200px]">{entity.subtitle}</span>
+        )}
+      </div>
+    </a>
   );
 }
