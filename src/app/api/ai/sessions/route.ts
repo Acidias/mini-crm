@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
+import { authenticateRequest } from "@/lib/api-auth";
 import { db } from "@/db";
 import { chatSessions } from "@/db/schema";
 import { desc, eq } from "drizzle-orm";
 
 // GET - list sessions, or get a single session with messages via ?get=id
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  const isAuthed = await authenticateRequest(req);
+  if (!isAuthed) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const getId = req.nextUrl.searchParams.get("get");
   if (getId) {
@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
 
 // POST - create new session
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  const isAuthed = await authenticateRequest(req);
+  if (!isAuthed) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const [created] = await db.insert(chatSessions).values({
     title: "New Chat",
@@ -42,8 +42,8 @@ export async function POST(req: NextRequest) {
 
 // PATCH - update session (title or messages)
 export async function PATCH(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  const isAuthed = await authenticateRequest(req);
+  if (!isAuthed) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const { id, title, messages } = await req.json();
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
@@ -63,8 +63,8 @@ export async function PATCH(req: NextRequest) {
 
 // DELETE - delete a session
 export async function DELETE(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+  const isAuthed = await authenticateRequest(req);
+  if (!isAuthed) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const { id } = await req.json();
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });

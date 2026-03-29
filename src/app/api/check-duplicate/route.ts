@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { authenticateRequest } from "@/lib/api-auth";
 import { db } from "@/db";
 import { persons, companies } from "@/db/schema";
 import { ilike, and, ne } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
+  const isAuthed = await authenticateRequest(req);
+  if (!isAuthed) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
   const { searchParams } = req.nextUrl;
   const type = searchParams.get("type");
   const email = searchParams.get("email");
