@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies, persons, events, todos } from "@/db/schema";
-import { count, desc, isNull, lt, sql, gte, asc, eq } from "drizzle-orm";
+import { count, desc, isNull, lt, sql, gte, asc, eq, and } from "drizzle-orm";
 
 function timeAgo(date: Date | null): string {
   if (!date) return "Never";
@@ -20,20 +20,20 @@ function timeAgo(date: Date | null): string {
 export const dynamic = "force-dynamic";
 
 export default async function Home() {
-  const [personCount] = await db.select({ value: count() }).from(persons);
-  const [companyCount] = await db.select({ value: count() }).from(companies);
+  const [personCount] = await db.select({ value: count() }).from(persons).where(isNull(persons.deletedAt));
+  const [companyCount] = await db.select({ value: count() }).from(companies).where(isNull(companies.deletedAt));
 
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
   const [recentlyContactedCount] = await db
     .select({ value: count() })
     .from(persons)
-    .where(sql`${persons.lastContactedAt} >= ${sevenDaysAgo}`);
+    .where(and(isNull(persons.deletedAt), sql`${persons.lastContactedAt} >= ${sevenDaysAgo}`));
 
   const [neverContactedCount] = await db
     .select({ value: count() })
     .from(persons)
-    .where(isNull(persons.lastContactedAt));
+    .where(and(isNull(persons.deletedAt), isNull(persons.lastContactedAt)));
 
   const needsFollowUp = await db
     .select({
@@ -47,7 +47,10 @@ export default async function Home() {
     .from(persons)
     .leftJoin(companies, sql`${persons.companyId} = ${companies.id}`)
     .where(
-      sql`${persons.lastContactedAt} IS NULL OR ${persons.lastContactedAt} < ${sevenDaysAgo}`
+      and(
+        isNull(persons.deletedAt),
+        sql`(${persons.lastContactedAt} IS NULL OR ${persons.lastContactedAt} < ${sevenDaysAgo})`
+      )
     )
     .orderBy(persons.lastContactedAt)
     .limit(10);
@@ -63,12 +66,14 @@ export default async function Home() {
     })
     .from(persons)
     .leftJoin(companies, sql`${persons.companyId} = ${companies.id}`)
+    .where(isNull(persons.deletedAt))
     .orderBy(desc(persons.createdAt))
     .limit(5);
 
   const recentCompanies = await db
     .select()
     .from(companies)
+    .where(isNull(companies.deletedAt))
     .orderBy(desc(companies.createdAt))
     .limit(5);
 

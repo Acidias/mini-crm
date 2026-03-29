@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
+import { isNull } from "drizzle-orm";
 import { createEvent } from "@/actions/events";
 
 export default async function NewEventPage() {
-  const allCompanies = await db.select().from(companies);
+  const allCompanies = await db.select().from(companies).where(isNull(companies.deletedAt));
   const today = new Date().toISOString().split("T")[0];
 
   return (

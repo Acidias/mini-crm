@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { persons, events } from "@/db/schema";
+import { isNull } from "drizzle-orm";
 import { createTodo } from "@/actions/todos";
 
 export default async function NewTodoPage() {
-  const allPersons = await db.select().from(persons);
+  const allPersons = await db.select().from(persons).where(isNull(persons.deletedAt));
   const allEvents = await db.select().from(events);
 
   return (

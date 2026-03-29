@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies, persons } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateCompany, deleteCompany } from "@/actions/companies";
 import ConfirmDelete from "@/components/confirm-delete";
@@ -22,7 +22,7 @@ export default async function EditCompanyPage({
   const companyPersons = await db
     .select()
     .from(persons)
-    .where(eq(persons.companyId, company.id));
+    .where(and(eq(persons.companyId, company.id), isNull(persons.deletedAt)));
 
   return (
     <div className="max-w-2xl">

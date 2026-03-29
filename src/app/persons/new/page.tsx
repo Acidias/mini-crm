@@ -1,11 +1,12 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies } from "@/db/schema";
+import { isNull } from "drizzle-orm";
 import { createPerson } from "@/actions/persons";
 import DuplicateWarning from "@/components/duplicate-warning";
 
 export default async function NewPersonPage() {
-  const allCompanies = await db.select().from(companies);
+  const allCompanies = await db.select().from(companies).where(isNull(companies.deletedAt));
 
   return (
     <div className="max-w-2xl">

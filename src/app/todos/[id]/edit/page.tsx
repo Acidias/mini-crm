@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { todos, persons, events } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateTodo, deleteTodo, toggleTodo } from "@/actions/todos";
 import ConfirmDelete from "@/components/confirm-delete";
@@ -19,7 +19,7 @@ export default async function EditTodoPage({
 
   if (!todo) notFound();
 
-  const allPersons = await db.select().from(persons);
+  const allPersons = await db.select().from(persons).where(isNull(persons.deletedAt));
   const allEvents = await db.select().from(events);
 
   return (

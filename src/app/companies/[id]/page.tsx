@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies, persons, events, emails, activities } from "@/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { createActivity, deleteActivity } from "@/actions/activities";
 import { getAllTags, getTagsForCompany } from "@/actions/tags";
@@ -33,7 +33,7 @@ export default async function CompanyDetailPage({
   const companyTags = await getTagsForCompany(company.id);
   const allTagsList = await getAllTags();
 
-  const companyPersons = await db.select().from(persons).where(eq(persons.companyId, company.id));
+  const companyPersons = await db.select().from(persons).where(and(eq(persons.companyId, company.id), isNull(persons.deletedAt)));
   const companyEvents = await db.select().from(events).where(eq(events.companyId, company.id)).orderBy(desc(events.date));
   const companyActivities = await db.select().from(activities).where(eq(activities.companyId, company.id)).orderBy(desc(activities.createdAt));
 

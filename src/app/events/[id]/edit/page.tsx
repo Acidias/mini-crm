@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { events, companies } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateEvent, deleteEvent, updateEventStatus } from "@/actions/events";
 import ConfirmDelete from "@/components/confirm-delete";
@@ -19,7 +19,7 @@ export default async function EditEventPage({
 
   if (!event) notFound();
 
-  const allCompanies = await db.select().from(companies);
+  const allCompanies = await db.select().from(companies).where(isNull(companies.deletedAt));
   const linkedCompany = event.companyId
     ? allCompanies.find((c) => c.id === event.companyId)
     : null;

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { persons, emails } from "@/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { sendEmail, saveDraft } from "@/actions/emails";
 import { FROM_ADDRESSES } from "@/lib/resend";
 
@@ -11,7 +11,7 @@ export default async function ComposeEmailPage({
   searchParams: Promise<{ to?: string; personId?: string; draft?: string }>;
 }) {
   const params = await searchParams;
-  const allPersons = await db.select().from(persons);
+  const allPersons = await db.select().from(persons).where(isNull(persons.deletedAt));
 
   // Load draft if editing one
   let draft: {
