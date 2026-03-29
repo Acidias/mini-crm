@@ -72,22 +72,27 @@ export default async function RootLayout({
                 <NavLink href="/trash" icon="&#9851;" label="Trash" />
               </nav>
               <div className="px-4 py-4 border-t border-white/10">
-                <p className="text-xs text-sidebar-text truncate mb-2">
+                <Link href="/profile" className="block text-xs text-sidebar-text truncate mb-2 hover:text-white transition-colors">
                   {session.user.email}
-                </p>
-                <form
-                  action={async () => {
-                    "use server";
-                    await signOut({ redirectTo: "/login" });
-                  }}
-                >
-                  <button
-                    type="submit"
-                    className="text-xs text-sidebar-text/50 hover:text-white transition-colors"
+                </Link>
+                <div className="flex gap-3">
+                  <Link href="/profile" className="text-xs text-sidebar-text/50 hover:text-white transition-colors">
+                    Profile
+                  </Link>
+                  <form
+                    action={async () => {
+                      "use server";
+                      await signOut({ redirectTo: "/login" });
+                    }}
                   >
-                    Sign out
-                  </button>
-                </form>
+                    <button
+                      type="submit"
+                      className="text-xs text-sidebar-text/50 hover:text-white transition-colors"
+                    >
+                      Sign out
+                    </button>
+                  </form>
+                </div>
               </div>
             </aside>
             <main className="flex-1 ml-56 p-8 min-h-screen">{children}</main>

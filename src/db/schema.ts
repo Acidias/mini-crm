@@ -130,6 +130,17 @@ export const entityTags = pgTable("entity_tags", {
   index("entity_tags_company_id_idx").on(table.companyId),
 ]);
 
+export const apiKeys = pgTable("api_keys", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  keyHash: varchar("key_hash", { length: 64 }).notNull(), // SHA-256 hash
+  keyPrefix: varchar("key_prefix", { length: 12 }).notNull(), // "mcrm_xxxx" for display
+  lastUsedAt: timestamp("last_used_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("api_keys_hash_idx").on(table.keyHash),
+]);
+
 export const chatSessions = pgTable("chat_sessions", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull().default("New Chat"),

@@ -8,7 +8,11 @@ export default auth((req) => {
     req.nextUrl.pathname.startsWith("/api/webhooks") ||
     req.nextUrl.pathname.startsWith("/api/auth");
 
-  if (isPublicPath) {
+  // Allow API routes with API key header to pass through (validated in route handlers)
+  const isApiRoute = req.nextUrl.pathname.startsWith("/api/");
+  const hasApiKey = req.headers.get("x-api-key") || req.headers.get("authorization")?.replace("Bearer ", "");
+
+  if (isPublicPath || (isApiRoute && hasApiKey)) {
     return NextResponse.next();
   }
 

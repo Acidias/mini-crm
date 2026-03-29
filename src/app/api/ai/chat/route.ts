@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import { auth } from "@/auth";
+import { authenticateRequest } from "@/lib/api-auth";
 import { db } from "@/db";
 import { chatSessions } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -28,8 +28,8 @@ async function saveSessionMessages(sessionId: number, messages: ChatMessage[]) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user) {
+  const isAuthed = await authenticateRequest(req);
+  if (!isAuthed) {
     return new Response(JSON.stringify({ error: "Unauthorised" }), { status: 401 });
   }
 
