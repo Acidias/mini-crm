@@ -67,6 +67,7 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [progress, setProgress] = useState<{ completed: number; max: number } | null>(null);
   const [apiKey, setApiKey] = useState("");
   const [keyInput, setKeyInput] = useState("");
   const [showKeyForm, setShowKeyForm] = useState(false);
@@ -127,6 +128,7 @@ export default function AIChatPage() {
       }
     } else {
       setIsLoading(false);
+      setProgress(null);
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
         pollingRef.current = null;
@@ -145,6 +147,9 @@ export default function AIChatPage() {
 
     if (data.status !== "working") {
       setIsLoading(false);
+      setProgress(null);
+      // Update sidebar
+      setSessions((prev) => prev.map((s) => s.id === id ? { ...s, status: "idle" } : s));
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
         pollingRef.current = null;
@@ -368,6 +373,9 @@ export default function AIChatPage() {
                 setMessages(finalMessages);
                 break;
               }
+              case "progress":
+                setProgress({ completed: event.completed, max: event.max });
+                break;
               case "error":
                 assistantText += `\n\nError: ${event.message}`;
                 finalMessages = [
@@ -416,6 +424,7 @@ export default function AIChatPage() {
       }
     } finally {
       abortControllerRef.current = null;
+      setProgress(null);
       // Only set idle if we didn't defer to checkSessionStatus
       if (!activeSessionId) {
         setIsLoading(false);
@@ -601,16 +610,28 @@ export default function AIChatPage() {
 
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700 flex items-center gap-2">
-                <span className="flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-                </span>
-                {!abortControllerRef.current
-                  ? "AI is working in the background..."
-                  : "AI is thinking..."
-                }
+              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                  </span>
+                  {!abortControllerRef.current
+                    ? "Working in the background..."
+                    : progress
+                    ? `Working... ${progress.completed}/${progress.max} tool calls`
+                    : "Thinking..."
+                  }
+                </div>
+                {progress && (
+                  <div className="w-48 h-1.5 bg-blue-200 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min((progress.completed / progress.max) * 100, 100)}%` }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           )}

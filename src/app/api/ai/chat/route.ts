@@ -16,15 +16,21 @@ type ChatMessage = {
   toolCalls?: { id: string; name: string; input: unknown; result?: unknown }[];
 };
 
-async function saveSessionMessages(sessionId: number, messages: ChatMessage[]) {
+async function saveSession(sessionId: number, messages: ChatMessage[], status: string = "working") {
   try {
     await db
       .update(chatSessions)
-      .set({ messages, updatedAt: new Date() })
+      .set({ messages, status, updatedAt: new Date() })
       .where(eq(chatSessions.id, sessionId));
   } catch {
-    // Non-critical - don't break the stream
+    // Non-critical
   }
+}
+
+async function markIdle(sessionId: number) {
+  try {
+    await db.update(chatSessions).set({ status: "idle", updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
+  } catch { /* non-critical */ }
 }
 
 export async function POST(req: NextRequest) {
@@ -68,22 +74,21 @@ export async function POST(req: NextRequest) {
         );
 
         let toolCallCount = 0;
+        let loopIteration = 0;
         let assistantText = "";
         let allToolCalls: ChatMessage["toolCalls"] = [];
 
-        // For server-side save: build the full message list
         const fullMessages: ChatMessage[] = messages.map(
           (m: { role: string; content: string }) => ({ role: m.role, content: m.content })
         );
 
-        // System prompt with cache control - cached across loop iterations
+        // System prompt with cache control
         const systemPrompt: Anthropic.Messages.TextBlockParam = {
           type: "text",
           text: getSystemPrompt(),
           cache_control: { type: "ephemeral" },
         };
 
-        // Tools with cache control on the last tool
         const cachedTools = allTools.map((tool, i) =>
           i === allTools.length - 1
             ? { ...tool, cache_control: { type: "ephemeral" as const } }
@@ -92,6 +97,14 @@ export async function POST(req: NextRequest) {
 
         // Agentic loop
         while (true) {
+          loopIteration++;
+
+          // Add separator between rounds so text doesn't run together
+          if (loopIteration > 1 && assistantText.length > 0) {
+            assistantText += "\n\n";
+            send({ type: "text", content: "\n\n" });
+          }
+
           const messageStream = anthropic.messages.stream({
             model: "claude-sonnet-4-20250514",
             max_tokens: 4096,
@@ -117,9 +130,17 @@ export async function POST(req: NextRequest) {
           }
 
           toolCallCount += toolUseBlocks.length;
+
+          // Send progress update
+          send({
+            type: "progress",
+            completed: toolCallCount,
+            max: MAX_TOOL_CALLS,
+          });
+
           if (toolCallCount > MAX_TOOL_CALLS) {
-            assistantText += "\n\n[Reached maximum tool call limit for this request]";
-            send({ type: "text", content: "\n\n[Reached maximum tool call limit for this request]" });
+            assistantText += "\n\n[Reached maximum tool call limit]";
+            send({ type: "text", content: "\n\n[Reached maximum tool call limit]" });
             send({ type: "done" });
             break;
           }
@@ -153,7 +174,6 @@ export async function POST(req: NextRequest) {
               result,
             });
 
-            // Truncate large results to save tokens on subsequent loop iterations
             const resultJson = JSON.stringify(result);
             const truncatedResult = resultJson.length > 4000
               ? resultJson.slice(0, 4000) + '..."}'
@@ -167,13 +187,13 @@ export async function POST(req: NextRequest) {
             });
           }
 
-          // Save progress after each tool round (server-side)
+          // Save progress after each tool round
           if (sessionId) {
             const progressMessages: ChatMessage[] = [
               ...fullMessages,
               { role: "assistant", content: assistantText, toolCalls: allToolCalls },
             ];
-            saveSessionMessages(sessionId, progressMessages);
+            saveSession(sessionId, progressMessages, "working");
           }
 
           anthropicMessages.push({
@@ -186,13 +206,13 @@ export async function POST(req: NextRequest) {
           });
         }
 
-        // Final save with complete response
+        // Final save as idle
         if (sessionId) {
           const finalSave: ChatMessage[] = [
             ...fullMessages,
             { role: "assistant", content: assistantText, toolCalls: allToolCalls },
           ];
-          await saveSessionMessages(sessionId, finalSave);
+          await saveSession(sessionId, finalSave, "idle");
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Unknown error";
@@ -203,13 +223,11 @@ export async function POST(req: NextRequest) {
         } else {
           send({ type: "error", message });
         }
+        // Mark idle on error too
+        if (sessionId) await markIdle(sessionId);
       } finally {
-        // Mark session as idle
-        if (sessionId) {
-          try {
-            await db.update(chatSessions).set({ status: "idle", updatedAt: new Date() }).where(eq(chatSessions.id, sessionId));
-          } catch { /* non-critical */ }
-        }
+        // Always mark idle in finally as a safety net
+        if (sessionId) await markIdle(sessionId);
         if (!clientDisconnected) {
           try { controller.close(); } catch { /* already closed */ }
         }
