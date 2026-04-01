@@ -89,7 +89,8 @@ export default async function ComposeEmailPage({
             />
           </div>
           {allPersons.filter((p) => p.email).length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap gap-1.5 items-center">
+              <span className="text-xs text-muted">Quick fill:</span>
               {allPersons
                 .filter((p) => p.email)
                 .map((p) => (
@@ -97,6 +98,7 @@ export default async function ComposeEmailPage({
                     key={p.id}
                     href={`/emails/compose?to=${encodeURIComponent(p.email!)}${draft ? `&draft=${draft.id}` : ""}`}
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-muted px-2 py-1 rounded transition-colors"
+                    title={p.email!}
                   >
                     {p.name}
                   </Link>
