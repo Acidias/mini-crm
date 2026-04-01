@@ -620,18 +620,10 @@ export default function AIChatPage() {
                   {!abortControllerRef.current
                     ? "Working in the background..."
                     : progress
-                    ? `Working... ${progress.completed}/${progress.max} tool calls`
+                    ? `Working... ${progress.completed} tool call${progress.completed !== 1 ? "s" : ""} completed`
                     : "Thinking..."
                   }
                 </div>
-                {progress && (
-                  <div className="w-48 h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-blue-500 rounded-full transition-all duration-300"
-                      style={{ width: `${Math.min((progress.completed / progress.max) * 100, 100)}%` }}
-                    />
-                  </div>
-                )}
               </div>
             </div>
           )}
