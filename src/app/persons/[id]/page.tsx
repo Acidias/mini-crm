@@ -75,6 +75,9 @@ export default async function PersonDetailPage({
                 <Link href={`/companies/${linkedCompany.id}`} className="text-accent hover:underline">{linkedCompany.name}</Link>
               )}
               {!person.position && !linkedCompany && <>Added {person.createdAt.toLocaleDateString("en-GB")}</>}
+              {person.linkedin && (
+                <> - <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">LinkedIn</a></>
+              )}
             </p>
           </div>
           <div className="flex gap-2">
@@ -115,6 +118,10 @@ export default async function PersonDetailPage({
             <div>
               <p className="text-muted text-xs uppercase tracking-wide font-medium mb-1">Company</p>
               <p>{linkedCompany ? <Link href={`/companies/${linkedCompany.id}`} className="text-accent hover:underline">{linkedCompany.name}</Link> : "-"}</p>
+            </div>
+            <div>
+              <p className="text-muted text-xs uppercase tracking-wide font-medium mb-1">LinkedIn</p>
+              <p>{person.linkedin ? <a href={person.linkedin} target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">{person.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "")}</a> : "-"}</p>
             </div>
             {person.notes && (
               <div className="col-span-2">

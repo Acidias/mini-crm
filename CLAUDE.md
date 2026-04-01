@@ -32,7 +32,7 @@ Contact and company management system with Google OAuth authentication.
 
 ## Database
 - **companies**: name, website, industry, email, phone, address, notes, deletedAt (soft delete)
-- **persons**: name, email, phone, position, notes, companyId (FK), lastContactedAt, deletedAt (soft delete)
+- **persons**: name, email, phone, position, linkedin, notes, companyId (FK), lastContactedAt, deletedAt (soft delete)
 - **events**: name, date, location, description, companyId (FK), status
 - **todos**: title, dueDate, done, notes, personId (FK), eventId (FK)
 - **emails**: resendId, direction, from/to, subject, body (text+html), personId (FK), read

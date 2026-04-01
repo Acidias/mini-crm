@@ -34,6 +34,7 @@ export const allTools: Tool[] = [
       type: "object" as const,
       properties: {
         query: { type: "string", description: "Search by name, email, position, or phone" },
+        linkedin: { type: "string", description: "LinkedIn profile URL" },
         limit: { type: "number", description: "Max results (default 20, max 50)" },
       },
       required: [],
@@ -185,6 +186,7 @@ export const allTools: Tool[] = [
         email: { type: "string", description: "Email address" },
         phone: { type: "string", description: "Phone number" },
         position: { type: "string", description: "Job title / role" },
+        linkedin: { type: "string", description: "LinkedIn profile URL" },
         notes: { type: "string", description: "Notes" },
         company_id: { type: "number", description: "ID of company to link to" },
       },
@@ -202,6 +204,7 @@ export const allTools: Tool[] = [
         email: { type: "string", description: "Email address" },
         phone: { type: "string", description: "Phone number" },
         position: { type: "string", description: "Job title / role" },
+        linkedin: { type: "string", description: "LinkedIn profile URL" },
         notes: { type: "string", description: "Notes" },
         company_id: { type: "number", description: "Company ID (use null to unlink)" },
       },

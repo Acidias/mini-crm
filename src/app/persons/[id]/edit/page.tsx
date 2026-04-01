@@ -115,6 +115,15 @@ export default async function EditPersonPage({
             />
           </div>
           <div>
+            <label className="block text-sm font-medium mb-1.5">LinkedIn</label>
+            <input
+              name="linkedin"
+              defaultValue={person.linkedin || ""}
+              className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+              placeholder="https://linkedin.com/in/..."
+            />
+          </div>
+          <div>
             <label className="block text-sm font-medium mb-1.5">Company</label>
             <select
               name="companyId"

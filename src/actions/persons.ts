@@ -17,6 +17,7 @@ export async function createPerson(formData: FormData) {
     email,
     phone: cleanString(formData.get("phone") as string),
     position: cleanString(formData.get("position") as string),
+    linkedin: cleanString(formData.get("linkedin") as string),
     notes: cleanString(formData.get("notes") as string),
     companyId: companyId ? parseInt(companyId) : null,
   });
@@ -35,6 +36,7 @@ export async function updatePerson(id: number, formData: FormData) {
       email,
       phone: cleanString(formData.get("phone") as string),
       position: cleanString(formData.get("position") as string),
+      linkedin: cleanString(formData.get("linkedin") as string),
       notes: cleanString(formData.get("notes") as string),
       companyId: companyId ? parseInt(companyId) : null,
       updatedAt: new Date(),

@@ -72,6 +72,7 @@ export default async function PersonsPage({
       email: persons.email,
       phone: persons.phone,
       position: persons.position,
+      linkedin: persons.linkedin,
       lastContactedAt: persons.lastContactedAt,
       companyName: companies.name,
     })

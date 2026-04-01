@@ -20,6 +20,7 @@ export const persons = pgTable("persons", {
   email: varchar("email", { length: 255 }),
   phone: varchar("phone", { length: 100 }),
   position: varchar("position", { length: 255 }),
+  linkedin: varchar("linkedin", { length: 500 }),
   notes: text("notes"),
   companyId: integer("company_id").references(() => companies.id, {
     onDelete: "set null",

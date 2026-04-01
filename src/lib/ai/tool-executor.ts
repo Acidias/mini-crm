@@ -125,6 +125,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
         email: persons.email,
         phone: persons.phone,
         position: persons.position,
+        linkedin: persons.linkedin,
         lastContactedAt: persons.lastContactedAt,
         companyName: companies.name,
         companyId: persons.companyId,
@@ -168,6 +169,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
       email: (input.email as string)?.trim()?.toLowerCase() || null,
       phone: (input.phone as string)?.trim() || null,
       position: (input.position as string)?.trim() || null,
+      linkedin: (input.linkedin as string)?.trim() || null,
       notes: (input.notes as string)?.trim() || null,
       companyId: (input.company_id as number) || null,
     }).returning();
@@ -181,6 +183,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     if (input.email !== undefined) updates.email = (input.email as string)?.trim()?.toLowerCase() || null;
     if (input.phone !== undefined) updates.phone = (input.phone as string)?.trim() || null;
     if (input.position !== undefined) updates.position = (input.position as string)?.trim() || null;
+    if (input.linkedin !== undefined) updates.linkedin = (input.linkedin as string)?.trim() || null;
     if (input.notes !== undefined) updates.notes = (input.notes as string)?.trim() || null;
     if (input.company_id !== undefined) updates.companyId = (input.company_id as number) || null;
 
