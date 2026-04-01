@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
 
 ${s.company_description ? `About the sender's company: ${s.company_description}\n` : ""}
 Writing tone: ${tone}
-${s.email_signature ? `Note: An email signature is appended automatically, do NOT include one.\n` : ""}
+${s.email_signature ? `IMPORTANT: An email signature is appended automatically. NEVER include "Best regards", "Kind regards", a sign-off, your name, or any closing. End the body with the last content paragraph.\n` : ""}
 ${to ? `Recipient: ${to}\n` : ""}
 
 Current subject: ${subject || "(none)"}
