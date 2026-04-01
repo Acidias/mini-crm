@@ -7,6 +7,7 @@ import { deleteApiKey } from "@/actions/api-keys";
 import { getSettings, saveSettings } from "@/actions/settings";
 import ConfirmDelete from "@/components/confirm-delete";
 import ApiKeyCreate from "./api-key-create";
+import SaveButton from "./save-button";
 
 export const dynamic = "force-dynamic";
 
@@ -98,12 +99,7 @@ export default async function ProfilePage() {
           </select>
         </div>
 
-        <button
-          type="submit"
-          className="bg-accent text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
-        >
-          Save Settings
-        </button>
+        <SaveButton />
       </form>
 
       {/* API Keys */}
