@@ -88,23 +88,6 @@ export default async function ComposeEmailPage({
               placeholder="recipient@example.com"
             />
           </div>
-          {allPersons.filter((p) => p.email).length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1.5 items-center">
-              <span className="text-xs text-muted">Quick fill:</span>
-              {allPersons
-                .filter((p) => p.email)
-                .map((p) => (
-                  <Link
-                    key={p.id}
-                    href={`/emails/compose?to=${encodeURIComponent(p.email!)}${draft ? `&draft=${draft.id}` : ""}`}
-                    className="text-xs bg-gray-100 hover:bg-gray-200 text-muted px-2 py-1 rounded transition-colors"
-                    title={p.email!}
-                  >
-                    {p.name}
-                  </Link>
-                ))}
-            </div>
-          )}
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">Subject</label>
