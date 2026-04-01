@@ -83,9 +83,10 @@ export async function POST(req: NextRequest) {
         );
 
         // System prompt with cache control
+        const systemPromptText = await getSystemPrompt();
         const systemPrompt: Anthropic.Messages.TextBlockParam = {
           type: "text",
-          text: getSystemPrompt(),
+          text: systemPromptText,
           cache_control: { type: "ephemeral" },
         };
 

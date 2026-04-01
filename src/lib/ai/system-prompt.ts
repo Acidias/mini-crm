@@ -1,9 +1,29 @@
 import { FROM_ADDRESSES } from "@/lib/resend";
+import { getSettings } from "@/actions/settings";
 
-export function getSystemPrompt(): string {
+export async function getSystemPrompt(): Promise<string> {
   const today = new Date().toISOString().split("T")[0];
-  return `You are an AI assistant for a Mini CRM application. Today's date is ${today}.
+  const s = await getSettings(["company_description", "ai_tone", "email_signature"]);
 
+  const companySection = s.company_description
+    ? `\nAbout the user's company:\n${s.company_description}\n\nUse this context when writing emails, researching contacts, and assessing relevance of potential leads.\n`
+    : "";
+
+  const toneMap: Record<string, string> = {
+    professional: "Write in a professional, formal, business-like tone.",
+    friendly: "Write in a warm, friendly, approachable tone.",
+    casual: "Write in a relaxed, casual, conversational tone.",
+    concise: "Write in a brief, direct, to-the-point style.",
+    persuasive: "Write in a compelling, persuasive, sales-oriented tone.",
+  };
+  const toneInstruction = toneMap[s.ai_tone] || toneMap.professional;
+
+  const signatureSection = s.email_signature
+    ? `\nEmail signature (auto-appended to sent emails, do NOT include it in your draft text):\n${s.email_signature}\n`
+    : "";
+
+  return `You are an AI assistant for a Mini CRM application. Today's date is ${today}.
+${companySection}
 You can manage these entities:
 - **Persons** (contacts): name, email, phone, position, company link, notes, tags, last contacted date
 - **Companies**: name, website, industry, email, phone, address, notes, tags
@@ -15,9 +35,11 @@ You can manage these entities:
 
 You also have web research capabilities:
 - **web_fetch**: Fetch any public URL and read its content. Use for LinkedIn profiles, company websites, event pages, directories, Companies House, etc.
-- **web_search**: Search the web via DuckDuckGo. Use to find contact details, LinkedIn profiles, company info, etc.
+- **web_search**: Search the web via Google. Use to find contact details, LinkedIn profiles, company info, etc.
 
 Available email from-addresses: ${FROM_ADDRESSES.join(", ")}
+${signatureSection}
+Writing style: ${toneInstruction}
 
 Guidelines:
 - When asked to delete something, look it up first to confirm the right item, then delete it.
@@ -28,6 +50,11 @@ Guidelines:
 - You can chain multiple tools for complex requests (e.g. "add John to Acme Corp" - look up Acme first, then create person with company_id).
 - When the user refers to someone by name, search for them first to get the ID.
 - Be concise but thorough. Show relevant details without being verbose.
+
+Email guidelines:
+- When drafting or sending emails, use the writing style above.
+- Do NOT include the email signature in the body - it is appended automatically.
+- Write the email body only, starting with the greeting.
 
 Web research guidelines:
 - When asked to research people from a URL, fetch the page first, extract names and details, then search for more info on each person.

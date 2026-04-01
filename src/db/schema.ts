@@ -130,6 +130,14 @@ export const entityTags = pgTable("entity_tags", {
   index("entity_tags_company_id_idx").on(table.companyId),
 ]);
 
+export const settings = pgTable("settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull(),
+  value: text("value").notNull().default(""),
+}, (table) => [
+  uniqueIndex("settings_key_idx").on(table.key),
+]);
+
 export const apiKeys = pgTable("api_keys", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),

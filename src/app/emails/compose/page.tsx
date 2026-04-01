@@ -4,6 +4,7 @@ import { persons, emails } from "@/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { sendEmail, saveDraft } from "@/actions/emails";
 import { FROM_ADDRESSES } from "@/lib/resend";
+import { getSetting } from "@/actions/settings";
 
 export default async function ComposeEmailPage({
   searchParams,
@@ -39,6 +40,7 @@ export default async function ComposeEmailPage({
     if (person?.email) prefillTo = person.email;
   }
 
+  const signature = await getSetting("email_signature");
   const prefillFrom = draft?.fromAddress || FROM_ADDRESSES[0];
   const prefillSubject = draft?.subject || "";
   const prefillBody = draft?.bodyText || "";
@@ -118,6 +120,12 @@ export default async function ComposeEmailPage({
             defaultValue={prefillBody}
             className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
           />
+          {signature && (
+            <div className="mt-2 border-t border-border pt-2">
+              <p className="text-xs text-muted mb-1">Signature (auto-appended):</p>
+              <pre className="text-xs text-muted whitespace-pre-wrap font-mono bg-gray-50 rounded px-2 py-1.5">{signature}</pre>
+            </div>
+          )}
         </div>
         <div className="flex gap-3 pt-2">
           <button

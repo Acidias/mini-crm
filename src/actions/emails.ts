@@ -6,6 +6,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getResend, DEFAULT_FROM, FROM_ADDRESSES } from "@/lib/resend";
+import { getSetting } from "@/actions/settings";
 
 async function findPersonByEmail(email: string) {
   const [person] = await db
@@ -19,10 +20,14 @@ async function findPersonByEmail(email: string) {
 export async function sendEmail(formData: FormData) {
   const to = formData.get("to") as string;
   const subject = formData.get("subject") as string;
-  const body = formData.get("body") as string;
+  const rawBody = formData.get("body") as string;
   const fromRaw = formData.get("from") as string;
   const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
   const draftId = formData.get("draftId") as string;
+
+  // Append signature
+  const signature = await getSetting("email_signature");
+  const body = signature ? `${rawBody}\n\n${signature}` : rawBody;
 
   const { data, error } = await getResend().emails.send({
     from,

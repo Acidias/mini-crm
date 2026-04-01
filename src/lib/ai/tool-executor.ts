@@ -4,6 +4,7 @@ import {
 } from "@/db/schema";
 import { eq, ilike, or, and, isNull, desc, asc, gte, lt, count } from "drizzle-orm";
 import { getResend, FROM_ADDRESSES, DEFAULT_FROM } from "@/lib/resend";
+import { getSetting } from "@/actions/settings";
 import * as cheerio from "cheerio";
 
 type ToolResult = { success: boolean; data?: unknown; error?: string };
@@ -500,11 +501,15 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
   async emails_send(input) {
     const to = (input.to as string)?.trim();
     const subject = (input.subject as string)?.trim();
-    const body = (input.body as string)?.trim();
-    if (!to || !subject || !body) return { success: false, error: "to, subject, and body are all required" };
+    const rawBody = (input.body as string)?.trim();
+    if (!to || !subject || !rawBody) return { success: false, error: "to, subject, and body are all required" };
 
     const fromRaw = (input.from as string) || "";
     const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
+
+    // Append signature
+    const signature = await getSetting("email_signature");
+    const body = signature ? `${rawBody}\n\n${signature}` : rawBody;
 
     const { data, error } = await getResend().emails.send({
       from,

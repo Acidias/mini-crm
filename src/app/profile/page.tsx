@@ -4,6 +4,7 @@ import { desc } from "drizzle-orm";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { deleteApiKey } from "@/actions/api-keys";
+import { getSettings, saveSettings } from "@/actions/settings";
 import ConfirmDelete from "@/components/confirm-delete";
 import ApiKeyCreate from "./api-key-create";
 
@@ -26,10 +27,11 @@ export default async function ProfilePage() {
   if (!session?.user) redirect("/login");
 
   const keys = await db.select().from(apiKeys).orderBy(desc(apiKeys.createdAt));
+  const s = await getSettings(["email_signature", "company_description", "ai_tone"]);
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold mb-6">Profile</h1>
+      <h1 className="text-2xl font-bold mb-6">Profile &amp; Settings</h1>
 
       {/* Account info */}
       <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
@@ -48,6 +50,61 @@ export default async function ProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Email & AI Settings */}
+      <form action={saveSettings} className="bg-card-bg rounded-xl border border-border p-5 mb-6 space-y-5">
+        <div>
+          <h2 className="font-semibold text-sm uppercase tracking-wide text-muted mb-1">Email &amp; AI Settings</h2>
+          <p className="text-muted text-xs mb-4">These settings are used when composing emails and by the AI assistant.</p>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Email Signature</label>
+          <p className="text-muted text-xs mb-1.5">Appended to all outgoing emails and drafts.</p>
+          <textarea
+            name="email_signature"
+            rows={4}
+            defaultValue={s.email_signature}
+            placeholder={"Best regards,\nYour Name\nYour Company\n+44 123 456 7890"}
+            className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1.5">Company Description</label>
+          <p className="text-muted text-xs mb-1.5">Tells the AI what your company does so it can write relevant emails and research.</p>
+          <textarea
+            name="company_description"
+            rows={4}
+            defaultValue={s.company_description}
+            placeholder="e.g. Foundry70 is a digital agency specialising in web development, AI integration, and business automation for SMEs in Hertfordshire."
+            className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium mb-1.5">AI Writing Tone</label>
+          <p className="text-muted text-xs mb-1.5">How the AI should write emails and messages.</p>
+          <select
+            name="ai_tone"
+            defaultValue={s.ai_tone || "professional"}
+            className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
+          >
+            <option value="professional">Professional - formal and business-like</option>
+            <option value="friendly">Friendly - warm and approachable</option>
+            <option value="casual">Casual - relaxed and conversational</option>
+            <option value="concise">Concise - brief and to the point</option>
+            <option value="persuasive">Persuasive - compelling and sales-oriented</option>
+          </select>
+        </div>
+
+        <button
+          type="submit"
+          className="bg-accent text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+        >
+          Save Settings
+        </button>
+      </form>
 
       {/* API Keys */}
       <div className="bg-card-bg rounded-xl border border-border p-5">
