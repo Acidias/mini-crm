@@ -5,6 +5,7 @@ import { eq, isNull } from "drizzle-orm";
 import { sendEmail, saveDraft } from "@/actions/emails";
 import { FROM_ADDRESSES } from "@/lib/resend";
 import { getSetting } from "@/actions/settings";
+import AiRewrite from "./ai-rewrite";
 
 export default async function ComposeEmailPage({
   searchParams,
@@ -56,7 +57,7 @@ export default async function ComposeEmailPage({
         </h1>
       </div>
 
-      <form action={sendEmail} className="bg-card-bg rounded-xl border border-border p-6 space-y-5">
+      <form id="compose-form" action={sendEmail} className="bg-card-bg rounded-xl border border-border p-6 space-y-5">
         {draft && <input type="hidden" name="draftId" value={draft.id} />}
         <div className="grid grid-cols-2 gap-4">
           <div>
@@ -120,6 +121,7 @@ export default async function ComposeEmailPage({
             defaultValue={prefillBody}
             className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent font-mono"
           />
+          <AiRewrite formId="compose-form" />
           {signature && (
             <div className="mt-2 border-t border-border pt-2">
               <p className="text-xs text-muted mb-1">Signature (auto-appended):</p>
