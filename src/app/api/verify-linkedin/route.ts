@@ -14,26 +14,36 @@ async function checkLinkedIn(url: string): Promise<{ valid: boolean; status: num
     }
 
     const res = await fetch(normalised, {
-      method: "HEAD",
+      method: "GET",
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; MiniCRM/1.0)",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
       },
       redirect: "follow",
-      signal: AbortSignal.timeout(8000),
+      signal: AbortSignal.timeout(10000),
     });
 
-    // LinkedIn returns 200 for valid profiles, 404 for invalid
-    // Sometimes redirects to login page (999 or 302) - treat as uncertain
     const finalUrl = res.url;
     const isLoginRedirect = finalUrl.includes("/login") || finalUrl.includes("/authwall");
 
-    if (res.status === 200 && !isLoginRedirect) {
-      return { valid: true, status: res.status };
-    }
     if (res.status === 404 || res.status === 410) {
       return { valid: false, status: res.status };
     }
-    // 999 = LinkedIn rate limit/block, 302 = auth redirect - inconclusive
+
+    // LinkedIn often returns 200 for soft-404 pages - check body content
+    if (res.status === 200 && !isLoginRedirect) {
+      const body = await res.text();
+      // LinkedIn soft-404 indicators
+      const isSoft404 =
+        body.includes("Page not found") ||
+        body.includes("page-not-found") ||
+        body.includes("profile-unavailable") ||
+        body.includes("This page doesn\u2019t exist") ||
+        body.includes("This page doesn't exist") ||
+        body.includes('"statusCode":404');
+      return { valid: !isSoft404, status: res.status };
+    }
+
+    // 999 = LinkedIn rate limit/block, 302 = auth redirect - inconclusive, treat as valid
     return { valid: true, status: res.status, redirected: isLoginRedirect ? "login" : undefined };
   } catch {
     return { valid: false, status: 0 };
