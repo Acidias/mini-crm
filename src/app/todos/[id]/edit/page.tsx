@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Refreshable } from "@/components/refreshable";
 import { db } from "@/db";
 import { todos, persons, events } from "@/db/schema";
 import { eq, isNull } from "drizzle-orm";
@@ -53,6 +54,7 @@ export default async function EditTodoPage({
         </form>
       </div>
 
+      <Refreshable>
       <form
         action={updateTodo.bind(null, todo.id)}
         className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
@@ -131,6 +133,7 @@ export default async function EditTodoPage({
           </Link>
         </div>
       </form>
+      </Refreshable>
       <div className="flex justify-end mt-3">
         <ConfirmDelete action={deleteTodo.bind(null, todo.id)} className="text-danger text-sm hover:underline" />
       </div>

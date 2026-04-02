@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Refreshable } from "@/components/refreshable";
 import { db } from "@/db";
 import { companies, persons } from "@/db/schema";
 import { eq, and, isNull } from "drizzle-orm";
@@ -64,6 +65,7 @@ export default async function EditCompanyPage({
         </div>
       )}
 
+      <Refreshable>
       <form
         action={updateCompany.bind(null, company.id)}
         className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
@@ -144,6 +146,7 @@ export default async function EditCompanyPage({
           </Link>
         </div>
       </form>
+      </Refreshable>
       <div className="flex justify-end mt-3">
         <ConfirmDelete action={deleteCompany.bind(null, company.id)} className="text-danger text-sm hover:underline" />
       </div>

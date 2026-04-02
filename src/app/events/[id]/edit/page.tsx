@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Refreshable } from "@/components/refreshable";
 import { db } from "@/db";
 import { events, companies } from "@/db/schema";
 import { eq, isNull } from "drizzle-orm";
@@ -92,6 +93,7 @@ export default async function EditEventPage({
         </div>
       </div>
 
+      <Refreshable>
       <form
         action={updateEvent.bind(null, event.id)}
         className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
@@ -164,6 +166,7 @@ export default async function EditEventPage({
           </Link>
         </div>
       </form>
+      </Refreshable>
       <div className="flex justify-end mt-3">
         <ConfirmDelete action={deleteEvent.bind(null, event.id)} className="text-danger text-sm hover:underline" />
       </div>
