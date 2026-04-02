@@ -110,7 +110,7 @@ export default async function PersonsPage({
       <VerifyLinkedInButton />
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border p-12 text-center">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
           <p className="text-muted mb-3">{query ? "No persons match your search." : "No persons yet."}</p>
           {!query && (
             <Link href="/persons/new" className="text-accent hover:underline text-sm">
@@ -120,7 +120,7 @@ export default async function PersonsPage({
         </div>
       ) : (
         <BulkActions entityType="persons">
-          <div className="bg-card-bg rounded-xl border border-border overflow-x-auto">
+          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-x-auto">
             <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">

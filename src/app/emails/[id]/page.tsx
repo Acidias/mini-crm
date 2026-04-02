@@ -43,7 +43,7 @@ export default async function ViewEmailPage({
         </Link>
       </div>
 
-      <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+      <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
         {/* Header */}
         <div className="px-6 py-4 border-b border-border">
           <div className="flex items-center justify-between mb-2">
@@ -54,7 +54,7 @@ export default async function ViewEmailPage({
                   ? "bg-amber-100 text-amber-700"
                   : isInbound
                   ? "bg-green-100 text-green-700"
-                  : "bg-blue-100 text-blue-700"
+                  : "bg-teal-50 text-teal-700"
               }`}
             >
               {isDraft ? "Draft" : isInbound ? "Received" : "Sent"}

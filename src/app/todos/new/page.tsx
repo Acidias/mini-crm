@@ -16,7 +16,7 @@ export default async function NewTodoPage() {
         </Link>
         <h1 className="text-2xl font-bold mt-2">Add To-Do</h1>
       </div>
-      <form action={createTodo} className="bg-card-bg rounded-xl border border-border p-6 space-y-5">
+      <form action={createTodo} className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5">
         <div>
           <label className="block text-sm font-medium mb-1.5">Task *</label>
           <input

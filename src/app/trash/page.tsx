@@ -45,7 +45,7 @@ export default async function TrashPage() {
       </div>
 
       {isEmpty ? (
-        <div className="bg-card-bg rounded-xl border border-border p-12 text-center">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
           <p className="text-muted">Trash is empty.</p>
         </div>
       ) : (
@@ -56,7 +56,7 @@ export default async function TrashPage() {
               <h2 className="font-semibold text-sm text-muted uppercase tracking-wide mb-3">
                 Persons ({deletedPersons.length})
               </h2>
-              <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+              <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
                 {deletedPersons.map((p) => (
                   <div
                     key={p.id}
@@ -94,7 +94,7 @@ export default async function TrashPage() {
               <h2 className="font-semibold text-sm text-muted uppercase tracking-wide mb-3">
                 Companies ({deletedCompanies.length})
               </h2>
-              <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+              <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
                 {deletedCompanies.map((c) => (
                   <div
                     key={c.id}

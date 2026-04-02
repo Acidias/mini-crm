@@ -54,7 +54,7 @@ export default async function EditEventPage({
       </div>
 
       {/* Status card */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6 flex items-center justify-between">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6 flex items-center justify-between">
         <div>
           <p className="text-xs text-muted uppercase tracking-wide font-medium">Status</p>
           <p className="text-lg font-semibold mt-0.5 capitalize">{event.status}</p>
@@ -84,7 +84,7 @@ export default async function EditEventPage({
             <form action={updateEventStatus.bind(null, event.id, "upcoming")}>
               <button
                 type="submit"
-                className="border border-border px-4 py-2 rounded-lg text-sm text-accent hover:bg-blue-50 transition-colors"
+                className="border border-border px-4 py-2 rounded-lg text-sm text-accent hover:bg-teal-50 transition-colors"
               >
                 Mark Upcoming
               </button>
@@ -96,7 +96,7 @@ export default async function EditEventPage({
       <Refreshable>
       <form
         action={updateEvent.bind(null, event.id)}
-        className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
+        className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5"
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">

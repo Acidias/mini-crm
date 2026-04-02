@@ -102,7 +102,7 @@ export default function CalendarView({
         </div>
       </div>
 
-      <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+      <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
         {/* Day headers */}
         <div className="grid grid-cols-7 text-center text-xs text-muted uppercase tracking-wide font-medium bg-stone-50 border-b border-border">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
@@ -127,7 +127,7 @@ export default function CalendarView({
               <div
                 key={i}
                 className={`border-b border-r border-border min-h-[100px] p-1.5 ${
-                  isToday ? "bg-blue-50/50" : ""
+                  isToday ? "bg-teal-50/50" : ""
                 }`}
               >
                 <div className={`text-xs font-medium mb-1 ${
@@ -144,10 +144,10 @@ export default function CalendarView({
                       href={`/events/${e.id}/edit`}
                       className={`block text-xs px-1.5 py-0.5 rounded truncate ${
                         e.status === "cancelled"
-                          ? "bg-stone-100 text-gray-400 line-through"
+                          ? "bg-stone-100 text-stone-400 line-through"
                           : e.status === "attended"
                           ? "bg-green-100 text-green-700"
-                          : "bg-blue-100 text-blue-700"
+                          : "bg-teal-50 text-teal-700"
                       }`}
                     >
                       {e.name}
@@ -159,7 +159,7 @@ export default function CalendarView({
                       href={`/todos/${t.id}/edit`}
                       className={`block text-xs px-1.5 py-0.5 rounded truncate ${
                         t.done
-                          ? "bg-stone-100 text-gray-400 line-through"
+                          ? "bg-stone-100 text-stone-400 line-through"
                           : "bg-amber-100 text-amber-700"
                       }`}
                     >
@@ -176,7 +176,7 @@ export default function CalendarView({
       {/* Legend */}
       <div className="flex gap-4 mt-4 text-xs text-muted">
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-blue-100 border border-blue-200" />
+          <span className="w-3 h-3 rounded bg-teal-50 border border-teal-200" />
           Event
         </div>
         <div className="flex items-center gap-1.5">

@@ -68,14 +68,14 @@ export default async function TodosPage({
       </div>
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border p-8 text-center">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-8 shadow-sm text-center">
           <p className="text-muted mb-3">{query ? "No todos match your search." : "All done! Nothing pending."}</p>
           {!query && <Link href="/todos/new" className="text-accent hover:underline text-sm">Add a new task</Link>}
         </div>
       ) : (
         <BulkActions entityType="todos">
           {pending.length > 0 && (
-            <div className="bg-card-bg rounded-xl border border-border overflow-hidden mb-6">
+            <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden mb-6">
               {pending.map((t) => (
                 <div key={t.id} className="flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-stone-50/50">
                   <input type="checkbox" name="ids" value={t.id} className="rounded" />
@@ -86,10 +86,10 @@ export default async function TodosPage({
                     <div className="flex items-center gap-2">
                       <Link href={`/todos/${t.id}/edit`} className="font-medium text-sm hover:text-accent truncate">{t.title}</Link>
                       {t.personName && (
-                        <Link href={`/persons/${t.personId}/edit`} className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded flex-shrink-0">{t.personName}</Link>
+                        <Link href={`/persons/${t.personId}/edit`} className="text-xs bg-teal-50 text-teal-700 px-1.5 py-0.5 rounded flex-shrink-0">{t.personName}</Link>
                       )}
                       {t.eventName && (
-                        <Link href={`/events/${t.eventId}/edit`} className="text-xs bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded flex-shrink-0">{t.eventName}</Link>
+                        <Link href={`/events/${t.eventId}/edit`} className="text-xs bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded flex-shrink-0">{t.eventName}</Link>
                       )}
                     </div>
                     {t.dueDate && (
@@ -110,7 +110,7 @@ export default async function TodosPage({
           {completed.length > 0 && (
             <>
               <h2 className="font-semibold text-sm text-muted uppercase tracking-wide mb-3">Completed</h2>
-              <div className="bg-card-bg rounded-xl border border-border overflow-hidden opacity-60">
+              <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden opacity-60">
                 {completed.map((t) => (
                   <div key={t.id} className="flex items-center gap-4 px-5 py-3 border-b border-border last:border-0">
                     <input type="checkbox" name="ids" value={t.id} className="rounded" />

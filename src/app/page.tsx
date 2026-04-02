@@ -261,7 +261,7 @@ export default async function Home() {
                     {new Date(e.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                   </span>
                   <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
-                    e.status === "upcoming" ? "bg-blue-50 text-blue-600" :
+                    e.status === "upcoming" ? "bg-teal-50 text-teal-700" :
                     e.status === "attended" ? "bg-emerald-50 text-emerald-600" :
                     "bg-stone-100 text-stone-500"
                   }`}>

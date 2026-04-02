@@ -67,7 +67,7 @@ export default async function EditPersonPage({
       </div>
 
       {/* Contact status card */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6 flex items-center justify-between">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6 flex items-center justify-between">
         <div>
           <p className="text-xs text-muted uppercase tracking-wide font-medium">Last Contacted</p>
           <p className={`text-lg font-semibold mt-0.5 ${isStale ? "text-danger" : "text-success"}`}>
@@ -97,7 +97,7 @@ export default async function EditPersonPage({
       <Refreshable>
       <form
         action={updatePerson.bind(null, person.id)}
-        className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
+        className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5"
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">

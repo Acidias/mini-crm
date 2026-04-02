@@ -59,7 +59,7 @@ export default async function ComposeEmailPage({
       </div>
 
       <Refreshable>
-      <form id="compose-form" action={sendEmail} className="bg-card-bg rounded-xl border border-border p-6 space-y-5">
+      <form id="compose-form" action={sendEmail} className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5">
         {draft && <input type="hidden" name="draftId" value={draft.id} />}
         <div className="grid grid-cols-2 gap-4">
           <div>

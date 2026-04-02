@@ -85,13 +85,13 @@ export default async function CompaniesPage({
       </div>
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border p-12 text-center">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
           <p className="text-muted mb-3">{query ? "No companies match your search." : "No companies yet."}</p>
           {!query && <Link href="/companies/new" className="text-accent hover:underline text-sm">Add your first company</Link>}
         </div>
       ) : (
         <BulkActions entityType="companies">
-          <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">

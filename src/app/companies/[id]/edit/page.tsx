@@ -40,7 +40,7 @@ export default async function EditCompanyPage({
 
       {/* Linked persons */}
       {companyPersons.length > 0 && (
-        <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
           <h2 className="font-semibold text-sm mb-3">
             Persons ({companyPersons.length})
           </h2>
@@ -68,7 +68,7 @@ export default async function EditCompanyPage({
       <Refreshable>
       <form
         action={updateCompany.bind(null, company.id)}
-        className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
+        className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5"
       >
         <div className="grid grid-cols-2 gap-4">
           <div className="col-span-2">

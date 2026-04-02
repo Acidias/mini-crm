@@ -5,7 +5,7 @@ import Link from "next/link";
 export default function EmailError({ reset }: { reset: () => void }) {
   return (
     <div className="max-w-lg mx-auto mt-20 text-center">
-      <div className="bg-card-bg rounded-xl border border-border p-8">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-8 shadow-sm">
         <h1 className="text-xl font-bold mb-2">Failed to load email</h1>
         <p className="text-muted text-sm mb-4">
           Something went wrong loading this email. It may still be processing.

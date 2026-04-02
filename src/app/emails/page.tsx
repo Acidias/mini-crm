@@ -128,7 +128,7 @@ export default async function EmailsPage({
       </div>
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border p-12 text-center">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
           <p className="text-muted mb-3">
             {query
               ? "No emails match your search."
@@ -143,7 +143,7 @@ export default async function EmailsPage({
           )}
         </div>
       ) : (
-        <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+        <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
           {allEmails.map((e) => {
             const isInbound = e.direction === "inbound";
             const isDraft = e.status === "draft";
@@ -151,14 +151,14 @@ export default async function EmailsPage({
             return (
               <div
                 key={e.id}
-                className={`flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-stone-50/50 ${isUnread ? "bg-blue-50/30" : ""}`}
+                className={`flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-stone-50/50 ${isUnread ? "bg-teal-50/30" : ""}`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   isDraft
                     ? "bg-amber-100 text-amber-700"
                     : isInbound
                     ? "bg-green-100 text-green-700"
-                    : "bg-blue-100 text-blue-700"
+                    : "bg-teal-50 text-teal-700"
                 }`}>
                   {isDraft ? "DR" : isInbound ? "IN" : "OUT"}
                 </div>

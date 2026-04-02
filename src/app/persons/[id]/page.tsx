@@ -95,7 +95,7 @@ export default async function PersonDetailPage({
                 href={`https://www.google.com/search?q=${encodeURIComponent(`${person.name}${linkedCompany ? ` ${linkedCompany.name}` : ""} LinkedIn`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="border border-[#0A66C2] text-[#0A66C2] px-4 py-2 rounded-lg text-sm hover:bg-blue-50 transition-colors"
+                className="border border-[#0A66C2] text-[#0A66C2] px-4 py-2 rounded-lg text-sm hover:bg-teal-50 transition-colors"
               >
                 Find on LinkedIn
               </a>
@@ -113,14 +113,14 @@ export default async function PersonDetailPage({
       </div>
 
       {/* Tags */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
         <h2 className="font-semibold mb-3 text-sm">Tags</h2>
         <TagManager entityType="person" entityId={person.id} currentTags={personTags} allTags={allTagsList} />
       </div>
 
       {/* Info + Contact status */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-card-bg rounded-xl border border-border p-5 col-span-2">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm col-span-2">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted text-xs uppercase tracking-wide font-medium mb-1">Email</p>
@@ -150,7 +150,7 @@ export default async function PersonDetailPage({
             )}
           </div>
         </div>
-        <div className="bg-card-bg rounded-xl border border-border p-5 flex flex-col justify-between">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm flex flex-col justify-between">
           <div>
             <p className="text-muted text-xs uppercase tracking-wide font-medium">Last Contacted</p>
             <p className={`text-2xl font-bold mt-1 ${isStale ? "text-danger" : "text-success"}`}>
@@ -166,7 +166,7 @@ export default async function PersonDetailPage({
       </div>
 
       {/* Email history */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-semibold">Email History ({personEmails.length})</h2>
           {person.email && (
@@ -179,7 +179,7 @@ export default async function PersonDetailPage({
           <div className="space-y-2">
             {personEmails.map((e) => (
               <div key={e.id} className="flex items-center gap-3 border-t border-border pt-2 first:border-0 first:pt-0">
-                <span className={`text-xs font-bold ${e.direction === "inbound" ? "text-green-600" : "text-blue-600"}`}>
+                <span className={`text-xs font-bold ${e.direction === "inbound" ? "text-green-600" : "text-teal-600"}`}>
                   {e.direction === "inbound" ? "IN" : "OUT"}
                 </span>
                 <Link href={`/emails/${e.id}`} className="text-sm hover:text-accent truncate flex-1">
@@ -194,7 +194,7 @@ export default async function PersonDetailPage({
 
       <div className="grid grid-cols-2 gap-6 mb-6">
         {/* Todos */}
-        <div className="bg-card-bg rounded-xl border border-border p-5">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">To-Dos ({personTodos.length})</h2>
             <Link href="/todos/new" className="text-accent text-xs hover:underline">+ Add</Link>
@@ -217,7 +217,7 @@ export default async function PersonDetailPage({
 
         {/* Company info (if linked) */}
         {linkedCompany && (
-          <div className="bg-card-bg rounded-xl border border-border p-5">
+          <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
             <h2 className="font-semibold mb-3">Company</h2>
             <div className="space-y-2 text-sm">
               <p><Link href={`/companies/${linkedCompany.id}`} className="text-accent hover:underline font-medium">{linkedCompany.name}</Link></p>
@@ -231,7 +231,7 @@ export default async function PersonDetailPage({
       </div>
 
       {/* Activity log */}
-      <div className="bg-card-bg rounded-xl border border-border p-5">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
         <h2 className="font-semibold mb-4">Activity Log</h2>
         <form action={createActivity} className="flex gap-2 mb-4">
           <input type="hidden" name="personId" value={person.id} />
@@ -255,8 +255,8 @@ export default async function PersonDetailPage({
               <div key={a.id} className="flex items-start gap-3 border-t border-border pt-3 first:border-0 first:pt-0">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${
                   a.type === "call" ? "bg-green-100 text-green-700" :
-                  a.type === "meeting" ? "bg-purple-100 text-purple-700" :
-                  a.type === "email" ? "bg-blue-100 text-blue-700" :
+                  a.type === "meeting" ? "bg-violet-50 text-violet-700" :
+                  a.type === "email" ? "bg-teal-50 text-teal-700" :
                   "bg-stone-100 text-stone-600"
                 }`}>{a.type}</span>
                 <div className="flex-1">

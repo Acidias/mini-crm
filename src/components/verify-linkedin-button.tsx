@@ -31,7 +31,7 @@ export default function VerifyLinkedInButton() {
         type="button"
         onClick={runVerification}
         disabled={isChecking}
-        className="border border-[#0A66C2] text-[#0A66C2] px-3 py-2 rounded-lg text-xs hover:bg-blue-50 transition-colors disabled:opacity-50"
+        className="border border-[#0A66C2] text-[#0A66C2] px-3 py-2 rounded-lg text-xs hover:bg-teal-50 transition-colors disabled:opacity-50"
       >
         {isChecking ? "Checking..." : "Verify LinkedIn URLs"}
       </button>

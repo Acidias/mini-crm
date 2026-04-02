@@ -33,7 +33,7 @@ export default async function EditTodoPage({
       </div>
 
       {/* Status card */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6 flex items-center justify-between">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6 flex items-center justify-between">
         <div>
           <p className="text-xs text-muted uppercase tracking-wide font-medium">Status</p>
           <p className={`text-lg font-semibold mt-0.5 ${todo.done ? "text-success" : "text-foreground"}`}>
@@ -57,7 +57,7 @@ export default async function EditTodoPage({
       <Refreshable>
       <form
         action={updateTodo.bind(null, todo.id)}
-        className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
+        className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5"
       >
         <div>
           <label className="block text-sm font-medium mb-1.5">Task *</label>

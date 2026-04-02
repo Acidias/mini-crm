@@ -64,13 +64,13 @@ export default async function CompanyDetailPage({
       </div>
 
       {/* Tags */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
         <h2 className="font-semibold mb-3 text-sm">Tags</h2>
         <TagManager entityType="company" entityId={company.id} currentTags={companyTags} allTags={allTagsList} />
       </div>
 
       {/* Info card */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6 grid grid-cols-2 gap-4 text-sm">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6 grid grid-cols-2 gap-4 text-sm">
         <div>
           <p className="text-muted text-xs uppercase tracking-wide font-medium mb-1">Website</p>
           <p>{company.website || "-"}</p>
@@ -97,7 +97,7 @@ export default async function CompanyDetailPage({
 
       <div className="grid grid-cols-2 gap-6 mb-6">
         {/* Persons */}
-        <div className="bg-card-bg rounded-xl border border-border p-5">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Persons ({companyPersons.length})</h2>
             <Link href={`/persons/new`} className="text-accent text-xs hover:underline">+ Add</Link>
@@ -120,7 +120,7 @@ export default async function CompanyDetailPage({
         </div>
 
         {/* Events */}
-        <div className="bg-card-bg rounded-xl border border-border p-5">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold">Events ({companyEvents.length})</h2>
             <Link href={`/events/new`} className="text-accent text-xs hover:underline">+ Add</Link>
@@ -135,7 +135,7 @@ export default async function CompanyDetailPage({
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     e.status === "attended" ? "bg-green-100 text-green-700" :
                     e.status === "cancelled" ? "bg-stone-100 text-stone-500" :
-                    "bg-blue-100 text-blue-700"
+                    "bg-teal-50 text-teal-700"
                   }`}>{e.status}</span>
                 </div>
               ))}
@@ -145,7 +145,7 @@ export default async function CompanyDetailPage({
       </div>
 
       {/* Activity log */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
         <h2 className="font-semibold mb-4">Activity Log</h2>
 
         {/* Add activity form */}
@@ -171,8 +171,8 @@ export default async function CompanyDetailPage({
               <div key={a.id} className="flex items-start gap-3 border-t border-border pt-3 first:border-0 first:pt-0">
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium mt-0.5 ${
                   a.type === "call" ? "bg-green-100 text-green-700" :
-                  a.type === "meeting" ? "bg-purple-100 text-purple-700" :
-                  a.type === "email" ? "bg-blue-100 text-blue-700" :
+                  a.type === "meeting" ? "bg-violet-50 text-violet-700" :
+                  a.type === "email" ? "bg-teal-50 text-teal-700" :
                   "bg-stone-100 text-stone-600"
                 }`}>{a.type}</span>
                 <div className="flex-1">

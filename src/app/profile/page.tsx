@@ -35,7 +35,7 @@ export default async function ProfilePage() {
       <h1 className="text-2xl font-bold mb-6">Profile &amp; Settings</h1>
 
       {/* Account info */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
         <h2 className="font-semibold mb-3 text-sm uppercase tracking-wide text-muted">Account</h2>
         <div className="flex items-center gap-4">
           {session.user.image && (
@@ -53,7 +53,7 @@ export default async function ProfilePage() {
       </div>
 
       {/* Email & AI Settings */}
-      <form action={saveSettings} className="bg-card-bg rounded-xl border border-border p-5 mb-6 space-y-5">
+      <form action={saveSettings} className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6 space-y-5">
         <div>
           <h2 className="font-semibold text-sm uppercase tracking-wide text-muted mb-1">Email &amp; AI Settings</h2>
           <p className="text-muted text-xs mb-4">These settings are used when composing emails and by the AI assistant.</p>
@@ -103,7 +103,7 @@ export default async function ProfilePage() {
       </form>
 
       {/* API Keys */}
-      <div className="bg-card-bg rounded-xl border border-border p-5">
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="font-semibold text-sm uppercase tracking-wide text-muted">API Keys</h2>

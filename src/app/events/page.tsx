@@ -63,14 +63,14 @@ export default async function EventsPage() {
           Upcoming
         </h2>
         {upcomingEvents.length === 0 ? (
-          <div className="bg-card-bg rounded-xl border border-border p-8 text-center">
+          <div className="bg-card-bg rounded-xl border border-border/60 p-8 shadow-sm text-center">
             <p className="text-muted mb-3">No upcoming events.</p>
             <Link href="/events/new" className="text-accent hover:underline text-sm">
               Plan your next event
             </Link>
           </div>
         ) : (
-          <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
@@ -132,7 +132,7 @@ export default async function EventsPage() {
           <h2 className="font-semibold text-sm text-muted uppercase tracking-wide mb-3">
             Past
           </h2>
-          <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
+          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
@@ -188,7 +188,7 @@ export default async function EventsPage() {
 
 function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
-    upcoming: "bg-blue-100 text-blue-700",
+    upcoming: "bg-teal-50 text-teal-700",
     attended: "bg-green-100 text-green-700",
     cancelled: "bg-stone-100 text-stone-500",
   };

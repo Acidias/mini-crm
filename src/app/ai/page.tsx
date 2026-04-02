@@ -478,7 +478,7 @@ export default function AIChatPage() {
   if (!apiKey) {
     return (
       <div className="max-w-lg mx-auto mt-20">
-        <div className="bg-card-bg rounded-xl border border-border p-8 text-center">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-8 shadow-sm text-center">
           <h1 className="text-2xl font-bold mb-2">AI Assistant</h1>
           <p className="text-muted text-sm mb-6">
             Enter your Claude API key to start. It is stored only in your browser.
@@ -547,7 +547,7 @@ export default function AIChatPage() {
                     }`}
                   >
                     {s.status === "working" && (
-                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse flex-shrink-0" />
+                      <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse flex-shrink-0" />
                     )}
                     {s.title}
                   </button>
@@ -558,7 +558,7 @@ export default function AIChatPage() {
                         setEditingTitle(s.id);
                         setTitleInput(s.title);
                       }}
-                      className="p-1 rounded hover:bg-stone-200 text-gray-400 hover:text-stone-600 transition-colors"
+                      className="p-1 rounded hover:bg-stone-200 text-stone-400 hover:text-stone-600 transition-colors"
                       title="Rename"
                     >
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -570,7 +570,7 @@ export default function AIChatPage() {
                         e.stopPropagation();
                         deleteSession(s.id);
                       }}
-                      className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
+                      className="p-1 rounded hover:bg-rose-50 text-stone-400 hover:text-rose-500 transition-colors"
                       title="Delete"
                     >
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -639,7 +639,7 @@ export default function AIChatPage() {
                   )}
                   {/* Text content */}
                   {msg.content && (
-                    <div className="bg-stone-100 rounded-xl px-5 py-4 text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-4 prose-headings:mb-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-table:border-collapse">
+                    <div className="bg-stone-100 rounded-xl px-5 py-4 text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-4 prose-headings:mb-2 prose-pre:bg-zinc-800 prose-pre:text-zinc-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-table:border-collapse">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   )}
@@ -650,12 +650,12 @@ export default function AIChatPage() {
 
           {isLoading && (
             <div className="flex justify-start">
-              <div className="bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm text-blue-700">
+              <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-3 text-sm text-teal-700">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                   </span>
                   {!abortControllerRef.current
                     ? "Working in the background..."
@@ -753,7 +753,7 @@ function ToolCallsGroup({ toolCalls }: { toolCalls: ToolCall[] }) {
             : `${doneCount} tool call${doneCount !== 1 ? "s" : ""}${failCount > 0 ? ` (${failCount} failed)` : ""}`
           }
         </span>
-        <span className="text-gray-300 ml-auto">{expanded ? "\u25B2" : "\u25BC"}</span>
+        <span className="text-stone-300 ml-auto">{expanded ? "\u25B2" : "\u25BC"}</span>
       </button>
 
       {/* Entity cards - always visible when there are CRM entities */}
@@ -767,7 +767,7 @@ function ToolCallsGroup({ toolCalls }: { toolCalls: ToolCall[] }) {
 
       {/* Expanded: show each step */}
       {expanded && (
-        <div className="border-t border-gray-100">
+        <div className="border-t border-stone-100">
           {toolCalls.map((tc) => (
             <ToolCallDetail key={tc.id} toolCall={tc} />
           ))}
@@ -784,7 +784,7 @@ function ToolCallDetail({ toolCall }: { toolCall: ToolCall }) {
   const isSuccess = toolCall.result?.success;
 
   return (
-    <div className="border-b border-gray-50 last:border-0">
+    <div className="border-b border-stone-50 last:border-0">
       <div className="flex items-center gap-2 px-3 py-1.5">
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
           !hasResult ? "bg-amber-400 animate-pulse" : isSuccess ? "bg-green-400" : "bg-red-400"
@@ -795,7 +795,7 @@ function ToolCallDetail({ toolCall }: { toolCall: ToolCall }) {
         )}
         <button
           onClick={() => setShowRaw(!showRaw)}
-          className="text-gray-300 ml-auto hover:text-stone-500 flex-shrink-0"
+          className="text-stone-300 ml-auto hover:text-stone-500 flex-shrink-0"
         >
           {showRaw ? "\u25B2" : "\u25BC"}
         </button>
@@ -900,7 +900,7 @@ function tagEntity(d: Record<string, unknown>): Entity {
 }
 
 const TYPE_STYLES: Record<string, { bg: string; icon: string }> = {
-  person: { bg: "bg-blue-50 border-blue-200 hover:bg-blue-100", icon: "\u25CF" },
+  person: { bg: "bg-teal-50 border-teal-200 hover:bg-teal-100", icon: "\u25CF" },
   company: { bg: "bg-purple-50 border-purple-200 hover:bg-purple-100", icon: "\u25C6" },
   event: { bg: "bg-amber-50 border-amber-200 hover:bg-amber-100", icon: "\u2605" },
   todo: { bg: "bg-green-50 border-green-200 hover:bg-green-100", icon: "\u2611" },
@@ -928,9 +928,9 @@ function EntityCard({ entity }: { entity: Entity }) {
       className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-lg border text-[11px] transition-colors ${style.bg}`}
     >
       <span>{style.icon}</span>
-      <span className="font-medium text-gray-800 truncate max-w-[180px]">{entity.label}</span>
+      <span className="font-medium text-stone-800 truncate max-w-[180px]">{entity.label}</span>
       {entity.subtitle && (
-        <span className="text-gray-400 truncate max-w-[120px] hidden sm:inline">{entity.subtitle}</span>
+        <span className="text-stone-400 truncate max-w-[120px] hidden sm:inline">{entity.subtitle}</span>
       )}
     </a>
   );
