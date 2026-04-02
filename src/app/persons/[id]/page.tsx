@@ -81,6 +81,25 @@ export default async function PersonDetailPage({
             </p>
           </div>
           <div className="flex gap-2">
+            {person.linkedin ? (
+              <a
+                href={person.linkedin}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-[#0A66C2] text-white px-4 py-2 rounded-lg text-sm hover:bg-[#004182] transition-colors"
+              >
+                View LinkedIn
+              </a>
+            ) : (
+              <a
+                href={`https://www.google.com/search?q=${encodeURIComponent(`${person.name}${linkedCompany ? ` ${linkedCompany.name}` : ""} LinkedIn`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="border border-[#0A66C2] text-[#0A66C2] px-4 py-2 rounded-lg text-sm hover:bg-blue-50 transition-colors"
+              >
+                Find on LinkedIn
+              </a>
+            )}
             {person.email && (
               <Link href={`/emails/compose?to=${encodeURIComponent(person.email)}`} className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors">
                 Send Email

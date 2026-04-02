@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Refreshable } from "@/components/refreshable";
 import { db } from "@/db";
 import { persons, companies } from "@/db/schema";
 import { eq } from "drizzle-orm";
@@ -92,6 +93,7 @@ export default async function EditPersonPage({
         </div>
       </div>
 
+      <Refreshable>
       <form
         action={updatePerson.bind(null, person.id)}
         className="bg-card-bg rounded-xl border border-border p-6 space-y-5"
@@ -180,6 +182,7 @@ export default async function EditPersonPage({
           </Link>
         </div>
       </form>
+      </Refreshable>
       <div className="flex justify-end mt-3">
         <ConfirmDelete action={deletePerson.bind(null, person.id)} className="text-danger text-sm hover:underline" />
       </div>
