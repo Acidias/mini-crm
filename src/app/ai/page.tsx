@@ -307,6 +307,7 @@ export default function AIChatPage() {
 
     // Auto-create session if none active
     let sessionId = activeSessionId;
+    let isNewSession = false;
     if (!sessionId) {
       const res = await fetch("/api/ai/sessions", {
         method: "POST",
@@ -315,6 +316,7 @@ export default function AIChatPage() {
       if (res.ok) {
         const session = await res.json();
         sessionId = session.id;
+        isNewSession = true;
         setActiveSessionId(session.id);
         setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", lastMessageAt: session.lastMessageAt || session.updatedAt, updatedAt: session.updatedAt }, ...prev]);
       }
@@ -422,8 +424,7 @@ export default function AIChatPage() {
       if (sessionId) {
         saveMessages(sessionId, finalMessages);
         // Auto-generate title from first user message using LLM
-        const currentSession = sessions.find((s) => s.id === sessionId);
-        if (currentSession?.title === "New Chat" && text.length > 0) {
+        if (isNewSession && text.length > 0) {
           generateTitle(sessionId, text);
         }
       }
