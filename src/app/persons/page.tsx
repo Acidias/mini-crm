@@ -90,58 +90,60 @@ export default async function PersonsPage({
   if (sortOrder !== "asc") sp.order = sortOrder;
 
   return (
-    <div className="max-w-6xl">
+    <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Persons</h1>
-          <p className="text-muted text-sm mt-1">{total} total</p>
+          <h1 className="text-2xl font-bold tracking-tight">Persons</h1>
+          <p className="text-muted text-sm mt-0.5">{total} contact{total !== 1 ? "s" : ""}</p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 items-center">
           <SearchInput placeholder="Search persons..." />
+          <VerifyLinkedInButton />
           <Link
             href="/persons/new"
-            className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+            className="bg-accent text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm"
           >
             + Add Person
           </Link>
         </div>
       </div>
 
-      <VerifyLinkedInButton />
-
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
-          <p className="text-muted mb-3">{query ? "No persons match your search." : "No persons yet."}</p>
+        <div className="bg-card-bg rounded-xl border border-border/60 p-16 shadow-sm text-center">
+          <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <p className="text-muted mb-1 font-medium">{query ? "No persons match your search." : "No persons yet."}</p>
           {!query && (
             <Link href="/persons/new" className="text-accent hover:underline text-sm">
-              Add your first person
+              Add your first contact
             </Link>
           )}
         </div>
       ) : (
         <BulkActions entityType="persons">
-          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-x-auto">
-            <table className="w-full text-sm min-w-[900px]">
+          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
-                  <th className="px-3 py-3 w-8">
+                <tr className="text-left text-[11px] uppercase tracking-wider text-muted/80 border-b border-border/60">
+                  <th className="pl-4 pr-2 py-3 w-10">
                     <input type="checkbox" data-select-all className="rounded" />
                   </th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">
+                  <th className="px-4 py-3 font-semibold">
                     <SortHeader label="Name" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">
+                  <th className="px-4 py-3 font-semibold hidden xl:table-cell">
                     <SortHeader label="Position" field="position" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">Company</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">
+                  <th className="px-4 py-3 font-semibold">Company</th>
+                  <th className="px-4 py-3 font-semibold hidden lg:table-cell">
                     <SortHeader label="Email" field="email" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">LinkedIn</th>
-                  <th className="px-3 py-3 font-medium whitespace-nowrap">
-                    <SortHeader label="Last Contacted" field="lastContacted" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+                  <th className="px-4 py-3 font-semibold">
+                    <SortHeader label="Last Contact" field="lastContacted" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-3 py-3 font-medium text-right whitespace-nowrap">Actions</th>
+                  <th className="px-4 py-3 w-24"></th>
                 </tr>
               </thead>
               <tbody>
@@ -150,38 +152,56 @@ export default async function PersonsPage({
                     !p.lastContactedAt ||
                     Date.now() - p.lastContactedAt.getTime() > 7 * 24 * 60 * 60 * 1000;
                   return (
-                    <tr key={p.id} className="border-t border-border hover:bg-stone-50/50">
-                      <td className="px-3 py-2.5">
+                    <tr key={p.id} className="border-t border-border/40 hover:bg-stone-50/60 group">
+                      <td className="pl-4 pr-2 py-3">
                         <input type="checkbox" name="ids" value={p.id} className="rounded" />
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <Link href={`/persons/${p.id}`} className="text-accent hover:underline font-medium">
-                          {p.name}
+                      <td className="px-4 py-3">
+                        <Link href={`/persons/${p.id}`} className="group/name">
+                          <span className="font-medium text-foreground group-hover/name:text-accent transition-colors">
+                            {p.name}
+                          </span>
+                          {p.linkedin && (
+                            <span className="inline-block ml-1.5 text-[#0A66C2] opacity-40 text-[10px]" title="Has LinkedIn">in</span>
+                          )}
                         </Link>
                       </td>
-                      <td className="px-3 py-2.5 text-muted max-w-[140px] truncate">{p.position || "-"}</td>
-                      <td className="px-3 py-2.5 text-muted max-w-[140px] truncate">{p.companyName || "-"}</td>
-                      <td className="px-3 py-2.5 text-muted text-xs">{p.email || "-"}</td>
-                      <td className="px-3 py-2.5">
-                        {p.linkedin ? (
-                          <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="text-accent text-xs hover:underline">
-                            {p.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "").slice(0, 18)}
-                          </a>
+                      <td className="px-4 py-3 text-muted hidden xl:table-cell">
+                        <span className="truncate block max-w-[160px]">{p.position || "-"}</span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {p.companyName ? (
+                          <span className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md font-medium">{p.companyName}</span>
                         ) : (
                           <span className="text-muted">-</span>
                         )}
                       </td>
-                      <td className="px-3 py-2.5 whitespace-nowrap">
-                        <span className={isStale ? "text-danger font-medium" : "text-success"}>
-                          {timeAgo(p.lastContactedAt)}
-                        </span>
+                      <td className="px-4 py-3 text-muted text-xs hidden lg:table-cell">
+                        {p.email || "-"}
                       </td>
-                      <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                        <div className="flex gap-3 justify-end items-center">
+                      <td className="px-4 py-3">
+                        {isStale ? (
+                          <span className="inline-flex items-center gap-1 text-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                            <span className="text-muted">{timeAgo(p.lastContactedAt)}</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                            <span className="text-muted">{timeAgo(p.lastContactedAt)}</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <form action={markAsContacted.bind(null, p.id)}>
-                            <button type="submit" className="text-success text-xs hover:underline">Contacted</button>
+                            <button type="submit" className="p-1.5 rounded-md hover:bg-emerald-50 text-stone-400 hover:text-emerald-600 transition-colors" title="Mark contacted">
+                              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            </button>
                           </form>
-                          <Link href={`/persons/${p.id}/edit`} className="text-accent text-xs hover:underline">Edit</Link>
+                          <Link href={`/persons/${p.id}/edit`} className="p-1.5 rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors" title="Edit">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                          </Link>
                           <ConfirmDelete action={deletePerson.bind(null, p.id)} />
                         </div>
                       </td>

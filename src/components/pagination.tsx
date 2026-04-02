@@ -27,15 +27,15 @@ export default function Pagination({
   }
 
   return (
-    <div className="flex items-center justify-between mt-4">
+    <div className="flex items-center justify-between mt-5 pt-4 border-t border-border/40">
       <p className="text-xs text-muted">
-        Showing {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, total)} of {total}
+        {(page - 1) * PAGE_SIZE + 1}-{Math.min(page * PAGE_SIZE, total)} of {total}
       </p>
       <div className="flex gap-1">
         {page > 1 && (
           <Link
             href={buildUrl(page - 1)}
-            className="border border-border px-3 py-1 rounded text-sm hover:bg-stone-50"
+            className="border border-border/60 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:bg-stone-50 hover:text-foreground transition-colors"
           >
             Prev
           </Link>
@@ -55,10 +55,10 @@ export default function Pagination({
             <Link
               key={p}
               href={buildUrl(p)}
-              className={`px-3 py-1 rounded text-sm ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                 p === page
-                  ? "bg-accent text-white"
-                  : "border border-border hover:bg-stone-50"
+                  ? "bg-accent text-white shadow-sm"
+                  : "text-muted hover:bg-stone-50 hover:text-foreground"
               }`}
             >
               {p}
@@ -68,7 +68,7 @@ export default function Pagination({
         {page < totalPages && (
           <Link
             href={buildUrl(page + 1)}
-            className="border border-border px-3 py-1 rounded text-sm hover:bg-stone-50"
+            className="border border-border/60 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:bg-stone-50 hover:text-foreground transition-colors"
           >
             Next
           </Link>

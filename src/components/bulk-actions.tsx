@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
 
 export default function BulkActions({
   children,
@@ -10,6 +10,20 @@ export default function BulkActions({
   entityType: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [selectedCount, setSelectedCount] = useState(0);
+
+  useEffect(() => {
+    function handleChange() {
+      if (!containerRef.current) return;
+      const checked = containerRef.current.querySelectorAll<HTMLInputElement>(
+        'input[name="ids"]:checked'
+      );
+      setSelectedCount(checked.length);
+    }
+    const el = containerRef.current;
+    if (el) el.addEventListener("change", handleChange);
+    return () => { if (el) el.removeEventListener("change", handleChange); };
+  }, []);
 
   function getSelectedIds(): number[] {
     if (!containerRef.current) return [];
@@ -25,6 +39,7 @@ export default function BulkActions({
       'input[name="ids"]'
     );
     checkboxes.forEach((cb) => (cb.checked = checked));
+    setSelectedCount(checked ? checkboxes.length : 0);
   }
 
   async function handleBulkDelete() {
@@ -52,33 +67,38 @@ export default function BulkActions({
 
   return (
     <div ref={containerRef}>
-      <div className="flex gap-2 mb-3">
-        <button
-          type="button"
-          onClick={handleBulkDelete}
-          className="border border-danger text-danger px-3 py-1 rounded-lg text-xs hover:bg-red-50 transition-colors"
-        >
-          Delete Selected
-        </button>
-        {entityType === "todos" && (
-          <>
-            <button
-              type="button"
-              onClick={() => handleBulkAction({ done: true })}
-              className="border border-success text-success px-3 py-1 rounded-lg text-xs hover:bg-green-50 transition-colors"
-            >
-              Mark Done
-            </button>
-            <button
-              type="button"
-              onClick={() => handleBulkAction({ done: false })}
-              className="border border-border text-muted px-3 py-1 rounded-lg text-xs hover:bg-stone-50 transition-colors"
-            >
-              Mark Pending
-            </button>
-          </>
-        )}
-      </div>
+      {/* Floating action bar - only shows when items are selected */}
+      {selectedCount > 0 && (
+        <div className="flex items-center gap-3 mb-3 px-4 py-2.5 bg-stone-800 text-white rounded-xl shadow-lg text-sm animate-in fade-in slide-in-from-bottom-2">
+          <span className="text-stone-300 text-xs font-medium">{selectedCount} selected</span>
+          <div className="w-px h-4 bg-stone-600" />
+          <button
+            type="button"
+            onClick={handleBulkDelete}
+            className="text-rose-300 hover:text-rose-200 text-xs font-medium transition-colors"
+          >
+            Delete
+          </button>
+          {entityType === "todos" && (
+            <>
+              <button
+                type="button"
+                onClick={() => handleBulkAction({ done: true })}
+                className="text-emerald-300 hover:text-emerald-200 text-xs font-medium transition-colors"
+              >
+                Mark Done
+              </button>
+              <button
+                type="button"
+                onClick={() => handleBulkAction({ done: false })}
+                className="text-stone-400 hover:text-stone-200 text-xs font-medium transition-colors"
+              >
+                Mark Pending
+              </button>
+            </>
+          )}
+        </div>
+      )}
       <div
         onClick={(e) => {
           const target = e.target as HTMLInputElement;
