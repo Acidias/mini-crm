@@ -55,6 +55,7 @@ const TOOL_LABELS: Record<string, string> = {
   emails_get: "Get Email",
   emails_send: "Send Email",
   emails_save_draft: "Save Draft",
+  emails_update: "Update Draft",
   activities_list: "List Activities",
   activities_create: "Log Activity",
   tags_list: "List Tags",

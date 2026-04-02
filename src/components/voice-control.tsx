@@ -120,10 +120,8 @@ export function VoiceControl() {
     // Add page context so the AI knows what the user is looking at
     const path = window.location.pathname;
     let context = "";
-    const personMatch = path.match(/^\/persons\/(\d+)/);
-    const companyMatch = path.match(/^\/companies\/(\d+)/);
-    if (personMatch) context = `[Currently viewing person ID ${personMatch[1]}] `;
-    else if (companyMatch) context = `[Currently viewing company ID ${companyMatch[1]}] `;
+    const match = path.match(/^\/(persons|companies|emails|events|todos)\/(\d+)/);
+    if (match) context = `[Currently viewing ${match[1].slice(0, -1)} ID ${match[2]}] `;
 
     executeVoiceCommand(context + text);
   }, [executeVoiceCommand]);

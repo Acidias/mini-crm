@@ -567,6 +567,24 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     return { success: true, data: { ...created, message: "Draft saved" } };
   },
 
+  async emails_update(input) {
+    const id = input.id as number;
+    const [existing] = await db.select().from(emails).where(eq(emails.id, id)).limit(1);
+    if (!existing) return { success: false, error: `Email with ID ${id} not found` };
+    if (existing.status !== "draft") return { success: false, error: "Only drafts can be edited" };
+
+    const updates: Record<string, unknown> = { updatedAt: new Date() };
+    if (input.to !== undefined) updates.toAddress = (input.to as string).trim();
+    if (input.subject !== undefined) updates.subject = (input.subject as string).trim();
+    if (input.body !== undefined) updates.bodyText = (input.body as string).trim();
+    if (input.from !== undefined && FROM_ADDRESSES.includes(input.from as string)) {
+      updates.fromAddress = input.from as string;
+    }
+
+    const [updated] = await db.update(emails).set(updates).where(eq(emails.id, id)).returning();
+    return { success: true, data: { ...updated, message: "Draft updated" } };
+  },
+
   // ─── ACTIVITIES ───
   async activities_list(input) {
     const personId = input.person_id as number | undefined;

@@ -408,6 +408,21 @@ export const allTools: Tool[] = [
       required: [],
     },
   },
+  {
+    name: "emails_update",
+    description: "Update an existing email draft. Use this to rewrite, edit, or modify a draft's subject, body, recipient, or sender. Only works on drafts.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        id: { type: "number", description: "Email ID (required)" },
+        to: { type: "string", description: "Recipient email address" },
+        subject: { type: "string", description: "Email subject" },
+        body: { type: "string", description: "Email body text" },
+        from: { type: "string", description: "Sender address" },
+      },
+      required: ["id"],
+    },
+  },
   // ─── WRITE: Activities ───
   {
     name: "activities_create",
