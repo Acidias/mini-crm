@@ -1,13 +1,4 @@
-// Custom event for voice commands that should go to AI chat
-export const AI_COMMAND_EVENT = "mini-crm:ai-command";
-
-export function dispatchAICommand(text: string) {
-  window.dispatchEvent(
-    new CustomEvent(AI_COMMAND_EVENT, { detail: text })
-  );
-}
-
-// Custom event for AI-triggered navigation
+// Custom event for AI-triggered navigation (used by AI chat page for typed commands)
 export const NAVIGATE_EVENT = "mini-crm:navigate";
 
 export function dispatchNavigate(url: string) {

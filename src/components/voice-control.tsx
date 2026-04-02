@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { dispatchAICommand, NAVIGATE_EVENT } from "@/lib/voice-commands";
+import { dispatchTokenUsage } from "@/lib/token-usage";
 
 interface SpeechRecognitionInstance extends EventTarget {
   continuous: boolean;
@@ -27,25 +27,80 @@ export function VoiceControl() {
   const [processing, setProcessing] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const listeningRef = useRef(false);
-  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     setSupported(!!SR);
   }, []);
 
-  // Listen for AI-triggered navigation events - clear processing when page changes
-  useEffect(() => {
-    function handleNavigate(e: Event) {
-      const url = (e as CustomEvent<string>).detail;
-      if (url) {
-        setProcessing(null);
-        if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
-        router.push(url);
-      }
+  // Call the AI chat API directly and handle the stream
+  const executeVoiceCommand = useCallback(async (text: string) => {
+    const apiKey = localStorage.getItem("claude-api-key");
+    if (!apiKey) {
+      setProcessing("No API key - set one in AI Chat first");
+      setTimeout(() => setProcessing(null), 3000);
+      return;
     }
-    window.addEventListener(NAVIGATE_EVENT, handleNavigate);
-    return () => window.removeEventListener(NAVIGATE_EVENT, handleNavigate);
+
+    setProcessing(text);
+
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          messages: [{ role: "user", content: text }],
+          apiKey,
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.json();
+        setProcessing(`Error: ${err.error || "Request failed"}`);
+        setTimeout(() => setProcessing(null), 3000);
+        return;
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() || "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+            switch (event.type) {
+              case "tool_result":
+                if (event.name === "navigate" && event.result?.success && event.result?.data?.url) {
+                  setProcessing(null);
+                  router.push(event.result.data.url);
+                }
+                break;
+              case "usage":
+                dispatchTokenUsage(event.usage);
+                break;
+              case "done":
+                setProcessing(null);
+                break;
+              case "error":
+                setProcessing(`Error: ${event.message}`);
+                setTimeout(() => setProcessing(null), 3000);
+                break;
+            }
+          } catch { /* skip malformed JSON */ }
+        }
+      }
+    } catch {
+      setProcessing("Connection error");
+      setTimeout(() => setProcessing(null), 3000);
+    }
   }, [router]);
 
   const handleResult = useCallback((e: Event) => {
@@ -70,13 +125,8 @@ export function VoiceControl() {
     if (personMatch) context = `[Currently viewing person ID ${personMatch[1]}] `;
     else if (companyMatch) context = `[Currently viewing company ID ${companyMatch[1]}] `;
 
-    setProcessing(text);
-    // Auto-clear after 15s in case the AI finishes without navigating
-    if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
-    processingTimeoutRef.current = setTimeout(() => setProcessing(null), 15000);
-
-    dispatchAICommand(context + text);
-  }, []);
+    executeVoiceCommand(context + text);
+  }, [executeVoiceCommand]);
 
   const startListening = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -127,7 +177,6 @@ export function VoiceControl() {
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch { /* */ }
       }
-      if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
     };
   }, []);
 
@@ -165,13 +214,13 @@ export function VoiceControl() {
 
       {/* Floating toast - visible over main content */}
       {processing && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-2">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-md">
           <span className="flex gap-1 flex-shrink-0">
             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
             <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
           </span>
-          <span className="text-sm truncate">&quot;{processing}&quot;</span>
+          <span className="text-sm truncate">{processing.startsWith("Error:") || processing.startsWith("No API") || processing.startsWith("Connection") ? processing : <>&quot;{processing}&quot;</>}</span>
         </div>
       )}
     </>
