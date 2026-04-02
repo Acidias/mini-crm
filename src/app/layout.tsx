@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { TokenTracker } from "@/components/token-tracker";
+import { VoiceControl } from "@/components/voice-control";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -72,6 +73,7 @@ export default async function RootLayout({
                 <NavLink href="/calendar" icon="&#9776;" label="Calendar" />
                 <NavLink href="/trash" icon="&#9851;" label="Trash" />
               </nav>
+              <VoiceControl />
               <TokenTracker />
               <div className="px-4 py-4 border-t border-white/10">
                 <Link href="/profile" className="block text-xs text-sidebar-text truncate mb-2 hover:text-white transition-colors">

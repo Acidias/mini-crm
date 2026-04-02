@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { dispatchTokenUsage } from "@/lib/token-usage";
+import { AI_COMMAND_EVENT } from "@/lib/voice-commands";
 
 type ToolCall = {
   id: string;
@@ -78,6 +79,7 @@ export default function AIChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pendingVoiceCommandRef = useRef<string | null>(null);
 
   // Load API key
   useEffect(() => {
@@ -298,7 +300,9 @@ export default function AIChatPage() {
   }
 
   async function sendMessage() {
-    const text = input.trim();
+    const voiceText = pendingVoiceCommandRef.current;
+    pendingVoiceCommandRef.current = null;
+    const text = (voiceText || input).trim();
     if (!text || isLoading || !apiKey) return;
 
     // Auto-create session if none active
@@ -465,6 +469,20 @@ export default function AIChatPage() {
       sendMessage();
     }
   }
+
+  // Listen for voice commands routed from VoiceControl
+  useEffect(() => {
+    function handleVoiceCommand(e: Event) {
+      const text = (e as CustomEvent<string>).detail;
+      if (!text || isLoading || !apiKey) return;
+      pendingVoiceCommandRef.current = text;
+      setInput(text);
+      // Small delay to let React render the input, then send
+      setTimeout(() => sendMessage(), 50);
+    }
+    window.addEventListener(AI_COMMAND_EVENT, handleVoiceCommand);
+    return () => window.removeEventListener(AI_COMMAND_EVENT, handleVoiceCommand);
+  }, [isLoading, apiKey]);
 
   // No API key - show setup
   if (!apiKey) {
