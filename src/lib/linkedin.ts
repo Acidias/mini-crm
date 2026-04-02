@@ -46,13 +46,11 @@ export async function checkLinkedIn(url: string): Promise<LinkedInCheckResult> {
       body.includes('"@type":"Person"');
     if (hasProfileMeta) return { valid: true, status: res.status };
 
-    const slug = pathMatch[1].toLowerCase();
-    const bodyLower = body.toLowerCase();
-    const hasSlugReference = bodyLower.includes(slug.replace(/-/g, " ")) ||
-      bodyLower.includes(`/in/${slug}`);
-    if (hasSlugReference) return { valid: true, status: res.status };
-
-    return { valid: false, status: res.status, redirected: "login" };
+    // If we reach here, LinkedIn showed an auth wall with no profile metadata
+    // and no soft-404 indicators. This happens for most real profiles when
+    // fetched without authentication. Default to valid - only soft-404
+    // content is strong enough evidence to mark as invalid.
+    return { valid: true, status: res.status, redirected: "login" };
   } catch {
     return { valid: false, status: 0 };
   }
