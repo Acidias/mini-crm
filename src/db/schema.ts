@@ -155,6 +155,7 @@ export const chatSessions = pgTable("chat_sessions", {
   title: varchar("title", { length: 255 }).notNull().default("New Chat"),
   messages: jsonb("messages").notNull().default([]),
   status: varchar("status", { length: 20 }).notNull().default("idle"), // "idle" or "working"
+  lastMessageAt: timestamp("last_message_at").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

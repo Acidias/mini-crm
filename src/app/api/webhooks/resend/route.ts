@@ -23,11 +23,11 @@ export async function POST(req: NextRequest) {
       if (emailId) {
         try {
           const resend = getResend();
-          const fullEmail = await resend.emails.get(emailId);
+          // Use the receiving API - resend.emails.get() is for SENT emails only
+          const fullEmail = await resend.emails.receiving.get(emailId);
           if (fullEmail.data) {
-            const emailData = fullEmail.data as unknown as Record<string, string>;
-            bodyText = emailData.text || null;
-            bodyHtml = emailData.html || null;
+            bodyText = fullEmail.data.text || null;
+            bodyHtml = fullEmail.data.html || null;
           }
         } catch {
           // If fetch fails, store without body - better than losing the email entirely
