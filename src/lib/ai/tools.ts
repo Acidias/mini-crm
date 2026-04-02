@@ -464,7 +464,7 @@ export const allTools: Tool[] = [
   // ─── NAVIGATION ───
   {
     name: "navigate",
-    description: "Navigate the user to a page in the Mini CRM. Use this when the user asks to see, open, go to, or view a page. Available pages: dashboard (/), ai chat (/ai), emails (/emails), compose email (/emails/compose), persons (/persons), new person (/persons/new), person detail (/persons/{id}), companies (/companies), new company (/companies/new), company detail (/companies/{id}), events (/events), new event (/events/new), todos (/todos), new todo (/todos/new), calendar (/calendar), trash (/trash), profile (/profile).",
+    description: "Navigate the user to a page in the Mini CRM. Use this when the user asks to see, open, go to, or view a page. Available pages: dashboard (/), ai chat (/ai), emails (/emails), draft emails (/emails?tab=drafts), compose email (/emails/compose), email detail (/emails/{id}), persons (/persons), new person (/persons/new), person detail (/persons/{id}), edit person (/persons/{id}/edit), companies (/companies), new company (/companies/new), company detail (/companies/{id}), edit company (/companies/{id}/edit), events (/events), new event (/events/new), todos (/todos), new todo (/todos/new), calendar (/calendar), trash (/trash), profile (/profile). Supports query parameters for filtered views.",
     input_schema: {
       type: "object" as const,
       properties: {
