@@ -24,31 +24,29 @@ export function VoiceControl() {
   const [supported, setSupported] = useState(false);
   const [listening, setListening] = useState(false);
   const [transcript, setTranscript] = useState("");
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const listeningRef = useRef(false);
-  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const processingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     setSupported(!!SR);
   }, []);
 
-  // Listen for AI-triggered navigation events
+  // Listen for AI-triggered navigation events - clear processing when page changes
   useEffect(() => {
     function handleNavigate(e: Event) {
       const url = (e as CustomEvent<string>).detail;
-      if (url) router.push(url);
+      if (url) {
+        setProcessing(null);
+        if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
+        router.push(url);
+      }
     }
     window.addEventListener(NAVIGATE_EVENT, handleNavigate);
     return () => window.removeEventListener(NAVIGATE_EVENT, handleNavigate);
   }, [router]);
-
-  const showFeedback = useCallback((msg: string) => {
-    setFeedback(msg);
-    if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-    feedbackTimeoutRef.current = setTimeout(() => setFeedback(null), 3000);
-  }, []);
 
   const handleResult = useCallback((e: Event) => {
     const event = e as unknown as { results: SpeechRecognitionResultList; resultIndex: number };
@@ -72,9 +70,13 @@ export function VoiceControl() {
     if (personMatch) context = `[Currently viewing person ID ${personMatch[1]}] `;
     else if (companyMatch) context = `[Currently viewing company ID ${companyMatch[1]}] `;
 
-    showFeedback(`Sending to AI: "${text}"`);
+    setProcessing(text);
+    // Auto-clear after 15s in case the AI finishes without navigating
+    if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
+    processingTimeoutRef.current = setTimeout(() => setProcessing(null), 15000);
+
     dispatchAICommand(context + text);
-  }, [showFeedback]);
+  }, []);
 
   const startListening = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -96,7 +98,7 @@ export function VoiceControl() {
     recognition.addEventListener("error", (e: Event) => {
       const error = e as unknown as { error: string };
       if (error.error === "not-allowed") {
-        showFeedback("Mic permission denied");
+        setProcessing(null);
         setListening(false);
         listeningRef.current = false;
       }
@@ -107,7 +109,7 @@ export function VoiceControl() {
     setListening(true);
 
     try { recognition.start(); } catch { /* already started */ }
-  }, [handleResult, showFeedback]);
+  }, [handleResult]);
 
   const stopListening = useCallback(() => {
     listeningRef.current = false;
@@ -125,44 +127,53 @@ export function VoiceControl() {
       if (recognitionRef.current) {
         try { recognitionRef.current.stop(); } catch { /* */ }
       }
-      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+      if (processingTimeoutRef.current) clearTimeout(processingTimeoutRef.current);
     };
   }, []);
 
   if (!supported) return null;
 
   return (
-    <div className="px-4 py-3 border-t border-white/10">
-      <button
-        onClick={listening ? stopListening : startListening}
-        className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
-          listening
-            ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
-            : "text-sidebar-text hover:bg-white/10 hover:text-white"
-        }`}
-      >
-        <span className="relative flex items-center justify-center w-4 h-4">
-          {listening && (
-            <span className="absolute w-4 h-4 bg-red-500 rounded-full animate-ping opacity-40" />
-          )}
-          <span className={`relative text-base ${listening ? "text-red-400" : ""}`}>
-            {listening ? "\u25CF" : "\u25CB"}
+    <>
+      {/* Sidebar mic button */}
+      <div className="px-4 py-3 border-t border-white/10">
+        <button
+          onClick={listening ? stopListening : startListening}
+          className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition-colors ${
+            listening
+              ? "bg-red-500/20 text-red-300 hover:bg-red-500/30"
+              : "text-sidebar-text hover:bg-white/10 hover:text-white"
+          }`}
+        >
+          <span className="relative flex items-center justify-center w-4 h-4">
+            {listening && (
+              <span className="absolute w-4 h-4 bg-red-500 rounded-full animate-ping opacity-40" />
+            )}
+            <span className={`relative text-base ${listening ? "text-red-400" : ""}`}>
+              {listening ? "\u25CF" : "\u25CB"}
+            </span>
           </span>
-        </span>
-        {listening ? "Listening..." : "Voice Control"}
-      </button>
+          {listening ? "Listening..." : "Voice Control"}
+        </button>
 
-      {transcript && (
-        <p className="mt-1 px-3 text-[10px] text-sidebar-text/50 truncate italic">
-          &quot;{transcript}&quot;
-        </p>
-      )}
+        {transcript && (
+          <p className="mt-1 px-3 text-[10px] text-sidebar-text/50 truncate italic">
+            &quot;{transcript}&quot;
+          </p>
+        )}
+      </div>
 
-      {feedback && (
-        <p className="mt-1 px-3 text-[10px] text-green-400/80 truncate">
-          {feedback}
-        </p>
+      {/* Floating toast - visible over main content */}
+      {processing && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-gray-900 text-white px-5 py-3 rounded-xl shadow-lg flex items-center gap-3 max-w-md animate-in fade-in slide-in-from-top-2">
+          <span className="flex gap-1 flex-shrink-0">
+            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+            <span className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+          </span>
+          <span className="text-sm truncate">&quot;{processing}&quot;</span>
+        </div>
       )}
-    </div>
+    </>
   );
 }
