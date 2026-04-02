@@ -11,6 +11,7 @@ export function getResend() {
 
 // Available "from" addresses - any address on a verified Resend domain works
 export const FROM_ADDRESSES = [
+  "mihaly@foundry70.co.uk",
   "info@foundry70.co.uk",
   "hello@foundry70.co.uk",
   "sales@foundry70.co.uk",
