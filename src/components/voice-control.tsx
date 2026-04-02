@@ -81,6 +81,8 @@ export function VoiceControl() {
       const decoder = new TextDecoder();
       let buffer = "";
       let navigated = false;
+      let usedTools = false;
+      let aiText = "";
 
       while (true) {
         const { done, value } = await reader.read();
@@ -95,6 +97,7 @@ export function VoiceControl() {
             const event = JSON.parse(line);
             switch (event.type) {
               case "tool_call":
+                usedTools = true;
                 setToast((prev) => prev ? { ...prev, status: `Using ${event.name}...` } : null);
                 break;
               case "tool_result":
@@ -102,7 +105,6 @@ export function VoiceControl() {
                   const url = event.result.data.url as string;
                   navigated = true;
                   if (url === pathname || url === pathname + window.location.search) {
-                    // Same page - refresh to show changes
                     router.refresh();
                   } else {
                     router.push(url);
@@ -110,30 +112,31 @@ export function VoiceControl() {
                 }
                 break;
               case "text":
-                // Show first ~60 chars of AI response as status
+                aiText += event.content;
                 setToast((prev) => {
                   if (!prev) return null;
-                  const current = prev.status.startsWith("Using ") || prev.status === "Thinking..."
-                    ? event.content
-                    : prev.status + event.content;
-                  return { ...prev, status: current.slice(0, 80) + (current.length > 80 ? "..." : "") };
+                  const display = aiText.slice(0, 120) + (aiText.length > 120 ? "..." : "");
+                  return { ...prev, status: display };
                 });
                 break;
               case "usage":
                 dispatchTokenUsage(event.usage);
                 break;
               case "done":
+                // If tools were used (data changed), refresh the current page
+                if (usedTools && !navigated) {
+                  router.refresh();
+                }
                 if (navigated) {
                   clearToast(500);
                 } else {
-                  // No navigation - show the final status briefly then clear
-                  setToast((prev) => prev ? { ...prev, status: prev.status || "Done" } : null);
-                  clearToast(3000);
+                  // Show AI response longer so user can read it
+                  clearToast(aiText.length > 60 ? 6000 : 3000);
                 }
                 break;
               case "error":
                 setToast({ command: displayText, status: `Error: ${event.message}` });
-                clearToast(4000);
+                clearToast(5000);
                 break;
             }
           } catch { /* skip malformed JSON */ }
