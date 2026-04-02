@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { companies } from "@/db/schema";
 import { isNull } from "drizzle-orm";
 import { createPerson } from "@/actions/persons";
+import LinkedInInput from "@/components/linkedin-input";
 import DuplicateWarning from "@/components/duplicate-warning";
 
 export default async function NewPersonPage() {
@@ -36,11 +37,7 @@ export default async function NewPersonPage() {
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">LinkedIn</label>
-            <input
-              name="linkedin"
-              className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-              placeholder="https://linkedin.com/in/..."
-            />
+            <LinkedInInput />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1.5">Company</label>

@@ -8,6 +8,7 @@ import Pagination, { PAGE_SIZE } from "@/components/pagination";
 import SortHeader from "@/components/sort-header";
 import BulkActions from "@/components/bulk-actions";
 import ConfirmDelete from "@/components/confirm-delete";
+import VerifyLinkedInButton from "@/components/verify-linkedin-button";
 
 export const dynamic = "force-dynamic";
 
@@ -105,6 +106,8 @@ export default async function PersonsPage({
           </Link>
         </div>
       </div>
+
+      <VerifyLinkedInButton />
 
       {total === 0 ? (
         <div className="bg-card-bg rounded-xl border border-border p-12 text-center">
