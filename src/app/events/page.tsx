@@ -73,7 +73,7 @@ export default async function EventsPage() {
           <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-gray-50">
+                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
                   <th className="px-5 py-3 font-medium">Event</th>
                   <th className="px-5 py-3 font-medium">Date</th>
                   <th className="px-5 py-3 font-medium">Location</th>
@@ -84,7 +84,7 @@ export default async function EventsPage() {
               </thead>
               <tbody>
                 {upcomingEvents.map((e) => (
-                  <tr key={e.id} className="border-t border-border hover:bg-gray-50/50">
+                  <tr key={e.id} className="border-t border-border hover:bg-stone-50/50">
                     <td className="px-5 py-3">
                       <Link
                         href={`/events/${e.id}/edit`}
@@ -135,7 +135,7 @@ export default async function EventsPage() {
           <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-gray-50">
+                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
                   <th className="px-5 py-3 font-medium">Event</th>
                   <th className="px-5 py-3 font-medium">Date</th>
                   <th className="px-5 py-3 font-medium">Location</th>
@@ -146,7 +146,7 @@ export default async function EventsPage() {
               </thead>
               <tbody>
                 {pastEvents.map((e) => (
-                  <tr key={e.id} className="border-t border-border hover:bg-gray-50/50 opacity-70">
+                  <tr key={e.id} className="border-t border-border hover:bg-stone-50/50 opacity-70">
                     <td className="px-5 py-3">
                       <Link
                         href={`/events/${e.id}/edit`}
@@ -190,7 +190,7 @@ function StatusBadge({ status }: { status: string }) {
   const styles: Record<string, string> = {
     upcoming: "bg-blue-100 text-blue-700",
     attended: "bg-green-100 text-green-700",
-    cancelled: "bg-gray-100 text-gray-500",
+    cancelled: "bg-stone-100 text-stone-500",
   };
   return (
     <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${styles[status] || styles.upcoming}`}>

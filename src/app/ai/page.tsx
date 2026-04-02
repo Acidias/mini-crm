@@ -521,7 +521,7 @@ export default function AIChatPage() {
               className={`group relative rounded-lg transition-colors ${
                 activeSessionId === s.id
                   ? "bg-accent/10"
-                  : "hover:bg-gray-100"
+                  : "hover:bg-stone-100"
               }`}
             >
               {editingTitle === s.id ? (
@@ -558,7 +558,7 @@ export default function AIChatPage() {
                         setEditingTitle(s.id);
                         setTitleInput(s.title);
                       }}
-                      className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+                      className="p-1 rounded hover:bg-stone-200 text-gray-400 hover:text-stone-600 transition-colors"
                       title="Rename"
                     >
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -639,7 +639,7 @@ export default function AIChatPage() {
                   )}
                   {/* Text content */}
                   {msg.content && (
-                    <div className="bg-gray-100 rounded-xl px-5 py-4 text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-4 prose-headings:mb-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-table:border-collapse">
+                    <div className="bg-stone-100 rounded-xl px-5 py-4 text-sm prose prose-sm max-w-none prose-p:my-2 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5 prose-headings:mt-4 prose-headings:mb-2 prose-pre:bg-gray-800 prose-pre:text-gray-100 prose-code:text-accent prose-code:before:content-none prose-code:after:content-none prose-table:text-xs prose-th:px-2 prose-th:py-1 prose-td:px-2 prose-td:py-1 prose-table:border-collapse">
                       <ReactMarkdown>{msg.content}</ReactMarkdown>
                     </div>
                   )}
@@ -734,11 +734,11 @@ function ToolCallsGroup({ toolCalls }: { toolCalls: ToolCall[] }) {
   const pendingCount = steps.filter((s) => s.success === null).length;
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 text-xs overflow-hidden">
+    <div className="bg-white rounded-xl border border-stone-200 text-xs overflow-hidden">
       {/* Compact header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 transition-colors"
+        className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-stone-50 transition-colors"
       >
         <div className="flex gap-0.5">
           {steps.map((s, i) => (
@@ -747,7 +747,7 @@ function ToolCallsGroup({ toolCalls }: { toolCalls: ToolCall[] }) {
             }`} />
           ))}
         </div>
-        <span className="text-gray-500">
+        <span className="text-stone-500">
           {pendingCount > 0
             ? `Running ${steps[steps.length - 1]?.label}...`
             : `${doneCount} tool call${doneCount !== 1 ? "s" : ""}${failCount > 0 ? ` (${failCount} failed)` : ""}`
@@ -789,24 +789,24 @@ function ToolCallDetail({ toolCall }: { toolCall: ToolCall }) {
         <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
           !hasResult ? "bg-amber-400 animate-pulse" : isSuccess ? "bg-green-400" : "bg-red-400"
         }`} />
-        <span className="text-gray-600 truncate">{label}</span>
+        <span className="text-stone-600 truncate">{label}</span>
         {hasResult && !isSuccess && toolCall.result?.error && (
           <span className="text-red-500 truncate ml-1">- {toolCall.result.error}</span>
         )}
         <button
           onClick={() => setShowRaw(!showRaw)}
-          className="text-gray-300 ml-auto hover:text-gray-500 flex-shrink-0"
+          className="text-gray-300 ml-auto hover:text-stone-500 flex-shrink-0"
         >
           {showRaw ? "\u25B2" : "\u25BC"}
         </button>
       </div>
       {showRaw && (
-        <div className="px-3 py-1.5 bg-gray-50 space-y-1">
-          <pre className="text-gray-500 whitespace-pre-wrap break-all text-[10px]">
+        <div className="px-3 py-1.5 bg-stone-50 space-y-1">
+          <pre className="text-stone-500 whitespace-pre-wrap break-all text-[10px]">
             {JSON.stringify(toolCall.input, null, 2)}
           </pre>
           {toolCall.result && (
-            <pre className="text-gray-500 whitespace-pre-wrap break-all text-[10px] max-h-32 overflow-y-auto">
+            <pre className="text-stone-500 whitespace-pre-wrap break-all text-[10px] max-h-32 overflow-y-auto">
               {JSON.stringify(toolCall.result.data, null, 2)}
             </pre>
           )}
@@ -905,8 +905,8 @@ const TYPE_STYLES: Record<string, { bg: string; icon: string }> = {
   event: { bg: "bg-amber-50 border-amber-200 hover:bg-amber-100", icon: "\u2605" },
   todo: { bg: "bg-green-50 border-green-200 hover:bg-green-100", icon: "\u2611" },
   email: { bg: "bg-cyan-50 border-cyan-200 hover:bg-cyan-100", icon: "\u2709" },
-  tag: { bg: "bg-gray-50 border-gray-200", icon: "\u25CF" },
-  activity: { bg: "bg-gray-50 border-gray-200 hover:bg-gray-100", icon: "\u25CB" },
+  tag: { bg: "bg-stone-50 border-stone-200", icon: "\u25CF" },
+  activity: { bg: "bg-stone-50 border-stone-200 hover:bg-stone-100", icon: "\u25CB" },
 };
 
 function EntityCard({ entity }: { entity: Entity }) {
@@ -914,7 +914,7 @@ function EntityCard({ entity }: { entity: Entity }) {
 
   if (entity.type === "tag") {
     return (
-      <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border bg-gray-50 border-gray-200 text-gray-600">
+      <span className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full border bg-stone-50 border-stone-200 text-stone-600">
         {entity.label}
       </span>
     );

@@ -6,7 +6,7 @@ export async function getSystemPrompt(): Promise<string> {
   const s = await getSettings(["company_description", "ai_tone", "email_signature"]);
 
   const companySection = s.company_description
-    ? `\nAbout the user's company:\n${s.company_description}\n\nUse this context when writing emails, researching contacts, and assessing relevance of potential leads.\n`
+    ? `\nContext about the user and their business:\n${s.company_description}\n\nUse this context when writing emails, researching contacts, scheduling meetings, and assessing relevance of potential leads. If the user mentions a booking link, Calendly, or scheduling, use the URL from this context.\n`
     : "";
 
   const toneMap: Record<string, string> = {

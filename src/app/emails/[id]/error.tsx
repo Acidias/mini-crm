@@ -19,7 +19,7 @@ export default function EmailError({ reset }: { reset: () => void }) {
           </button>
           <Link
             href="/emails"
-            className="border border-border px-4 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+            className="border border-border px-4 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
           >
             Back to Emails
           </Link>

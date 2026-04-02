@@ -72,7 +72,7 @@ export default function BulkActions({
             <button
               type="button"
               onClick={() => handleBulkAction({ done: false })}
-              className="border border-border text-muted px-3 py-1 rounded-lg text-xs hover:bg-gray-50 transition-colors"
+              className="border border-border text-muted px-3 py-1 rounded-lg text-xs hover:bg-stone-50 transition-colors"
             >
               Mark Pending
             </button>

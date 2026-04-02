@@ -35,7 +35,7 @@ export default function Pagination({
         {page > 1 && (
           <Link
             href={buildUrl(page - 1)}
-            className="border border-border px-3 py-1 rounded text-sm hover:bg-gray-50"
+            className="border border-border px-3 py-1 rounded text-sm hover:bg-stone-50"
           >
             Prev
           </Link>
@@ -58,7 +58,7 @@ export default function Pagination({
               className={`px-3 py-1 rounded text-sm ${
                 p === page
                   ? "bg-accent text-white"
-                  : "border border-border hover:bg-gray-50"
+                  : "border border-border hover:bg-stone-50"
               }`}
             >
               {p}
@@ -68,7 +68,7 @@ export default function Pagination({
         {page < totalPages && (
           <Link
             href={buildUrl(page + 1)}
-            className="border border-border px-3 py-1 rounded text-sm hover:bg-gray-50"
+            className="border border-border px-3 py-1 rounded text-sm hover:bg-stone-50"
           >
             Next
           </Link>

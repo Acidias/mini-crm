@@ -77,7 +77,7 @@ export default async function NewEventPage() {
           </button>
           <Link
             href="/events"
-            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
           >
             Cancel
           </Link>

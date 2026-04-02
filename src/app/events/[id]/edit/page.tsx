@@ -74,7 +74,7 @@ export default async function EditEventPage({
             <form action={updateEventStatus.bind(null, event.id, "cancelled")}>
               <button
                 type="submit"
-                className="border border-border px-4 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+                className="border border-border px-4 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
               >
                 Cancel Event
               </button>
@@ -160,7 +160,7 @@ export default async function EditEventPage({
           </button>
           <Link
             href="/events"
-            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
           >
             Cancel
           </Link>

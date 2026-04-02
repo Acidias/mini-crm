@@ -105,7 +105,7 @@ export default async function PersonDetailPage({
                 Send Email
               </Link>
             )}
-            <Link href={`/persons/${person.id}/edit`} className="border border-border px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+            <Link href={`/persons/${person.id}/edit`} className="border border-border px-4 py-2 rounded-lg text-sm hover:bg-stone-50 transition-colors">
               Edit
             </Link>
           </div>
@@ -257,7 +257,7 @@ export default async function PersonDetailPage({
                   a.type === "call" ? "bg-green-100 text-green-700" :
                   a.type === "meeting" ? "bg-purple-100 text-purple-700" :
                   a.type === "email" ? "bg-blue-100 text-blue-700" :
-                  "bg-gray-100 text-gray-600"
+                  "bg-stone-100 text-stone-600"
                 }`}>{a.type}</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{a.title}</p>

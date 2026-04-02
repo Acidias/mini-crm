@@ -82,19 +82,19 @@ export default function CalendarView({
         <div className="flex items-center gap-2">
           <button
             onClick={prevMonth}
-            className="border border-border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+            className="border border-border px-3 py-1.5 rounded-lg text-sm hover:bg-stone-50 transition-colors"
           >
             &larr;
           </button>
           <button
             onClick={goToday}
-            className="border border-border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+            className="border border-border px-3 py-1.5 rounded-lg text-sm hover:bg-stone-50 transition-colors"
           >
             Today
           </button>
           <button
             onClick={nextMonth}
-            className="border border-border px-3 py-1.5 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+            className="border border-border px-3 py-1.5 rounded-lg text-sm hover:bg-stone-50 transition-colors"
           >
             &rarr;
           </button>
@@ -104,7 +104,7 @@ export default function CalendarView({
 
       <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
         {/* Day headers */}
-        <div className="grid grid-cols-7 text-center text-xs text-muted uppercase tracking-wide font-medium bg-gray-50 border-b border-border">
+        <div className="grid grid-cols-7 text-center text-xs text-muted uppercase tracking-wide font-medium bg-stone-50 border-b border-border">
           {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
             <div key={d} className="py-2">
               {d}
@@ -116,7 +116,7 @@ export default function CalendarView({
         <div className="grid grid-cols-7">
           {cells.map((day, i) => {
             if (day === null) {
-              return <div key={i} className="border-b border-r border-border min-h-[100px] bg-gray-50/30" />;
+              return <div key={i} className="border-b border-r border-border min-h-[100px] bg-stone-50/30" />;
             }
             const ds = dateStr(day);
             const dayEvents = eventsByDate[ds] || [];
@@ -144,7 +144,7 @@ export default function CalendarView({
                       href={`/events/${e.id}/edit`}
                       className={`block text-xs px-1.5 py-0.5 rounded truncate ${
                         e.status === "cancelled"
-                          ? "bg-gray-100 text-gray-400 line-through"
+                          ? "bg-stone-100 text-gray-400 line-through"
                           : e.status === "attended"
                           ? "bg-green-100 text-green-700"
                           : "bg-blue-100 text-blue-700"
@@ -159,7 +159,7 @@ export default function CalendarView({
                       href={`/todos/${t.id}/edit`}
                       className={`block text-xs px-1.5 py-0.5 rounded truncate ${
                         t.done
-                          ? "bg-gray-100 text-gray-400 line-through"
+                          ? "bg-stone-100 text-gray-400 line-through"
                           : "bg-amber-100 text-amber-700"
                       }`}
                     >
@@ -188,7 +188,7 @@ export default function CalendarView({
           Attended
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded bg-gray-100 border border-gray-200" />
+          <span className="w-3 h-3 rounded bg-stone-100 border border-stone-200" />
           Done / Cancelled
         </div>
       </div>

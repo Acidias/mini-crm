@@ -102,7 +102,7 @@ export default async function ViewEmailPage({
         </div>
 
         {/* Actions */}
-        <div className="px-6 py-3 border-t border-border bg-gray-50/50 flex items-center justify-between">
+        <div className="px-6 py-3 border-t border-border bg-stone-50/50 flex items-center justify-between">
           <div className="flex gap-2">
             {isDraft ? (
               <Link

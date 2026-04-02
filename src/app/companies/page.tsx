@@ -94,7 +94,7 @@ export default async function CompaniesPage({
           <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-gray-50">
+                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
                   <th className="px-5 py-3 w-8"><input type="checkbox" data-select-all className="rounded" /></th>
                   <th className="px-5 py-3 font-medium">
                     <SortHeader label="Company" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
@@ -109,7 +109,7 @@ export default async function CompaniesPage({
               </thead>
               <tbody>
                 {allCompanies.map((c) => (
-                  <tr key={c.id} className="border-t border-border hover:bg-gray-50/50">
+                  <tr key={c.id} className="border-t border-border hover:bg-stone-50/50">
                     <td className="px-5 py-3"><input type="checkbox" name="ids" value={c.id} className="rounded" /></td>
                     <td className="px-5 py-3">
                       <Link href={`/companies/${c.id}`} className="text-accent hover:underline font-medium">{c.name}</Link>

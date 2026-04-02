@@ -50,7 +50,7 @@ export default function LinkedInInput({
           type="button"
           onClick={verify}
           disabled={!value.trim() || status === "checking"}
-          className="border border-border px-3 py-2 rounded-lg text-xs text-muted hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="border border-border px-3 py-2 rounded-lg text-xs text-muted hover:bg-stone-50 transition-colors disabled:opacity-50"
         >
           {status === "checking" ? "..." : "Verify"}
         </button>

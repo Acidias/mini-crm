@@ -45,7 +45,7 @@ export default async function EditTodoPage({
             type="submit"
             className={`px-4 py-2 rounded-lg text-sm transition-colors ${
               todo.done
-                ? "border border-border text-muted hover:bg-gray-50"
+                ? "border border-border text-muted hover:bg-stone-50"
                 : "bg-success text-white hover:bg-green-600"
             }`}
           >
@@ -127,7 +127,7 @@ export default async function EditTodoPage({
           </button>
           <Link
             href="/todos"
-            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
           >
             Cancel
           </Link>

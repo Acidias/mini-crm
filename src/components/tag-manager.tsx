@@ -53,7 +53,7 @@ export default function TagManager({
             >
               <button
                 type="submit"
-                className="text-xs px-2 py-0.5 rounded-full border border-border text-muted hover:bg-gray-50 transition-colors"
+                className="text-xs px-2 py-0.5 rounded-full border border-border text-muted hover:bg-stone-50 transition-colors"
               >
                 + {t.name}
               </button>

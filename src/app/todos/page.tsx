@@ -77,10 +77,10 @@ export default async function TodosPage({
           {pending.length > 0 && (
             <div className="bg-card-bg rounded-xl border border-border overflow-hidden mb-6">
               {pending.map((t) => (
-                <div key={t.id} className="flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-gray-50/50">
+                <div key={t.id} className="flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-stone-50/50">
                   <input type="checkbox" name="ids" value={t.id} className="rounded" />
                   <form action={toggleTodo.bind(null, t.id, true)}>
-                    <button type="submit" className="w-5 h-5 rounded border-2 border-gray-300 hover:border-accent transition-colors flex-shrink-0" title="Mark as done" />
+                    <button type="submit" className="w-5 h-5 rounded border-2 border-stone-300 hover:border-accent transition-colors flex-shrink-0" title="Mark as done" />
                   </form>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">

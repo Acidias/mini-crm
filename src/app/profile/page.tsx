@@ -72,13 +72,13 @@ export default async function ProfilePage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-1.5">Company Description</label>
-          <p className="text-muted text-xs mb-1.5">Tells the AI what your company does so it can write relevant emails and research.</p>
+          <label className="block text-sm font-medium mb-1.5">AI Context</label>
+          <p className="text-muted text-xs mb-1.5">Everything the AI should know about you and your business. Used when writing emails, researching contacts, and answering questions.</p>
           <textarea
             name="company_description"
-            rows={4}
+            rows={8}
             defaultValue={s.company_description}
-            placeholder="e.g. Foundry70 is a digital agency specialising in web development, AI integration, and business automation for SMEs in Hertfordshire."
+            placeholder={"Company: Foundry70 - digital agency specialising in web dev, AI integration, and automation for SMEs in Hertfordshire.\nWebsite: https://foundry70.co.uk\n\nAbout me: Mihaly Dani, founder and lead developer.\nCalendly: https://calendly.com/mihaly\nPhone: +44 ...\n\nCustom instructions: When writing cold outreach emails, mention our free discovery call. Always include Calendly link when suggesting a meeting."}
             className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
           />
         </div>

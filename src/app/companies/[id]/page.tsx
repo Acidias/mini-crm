@@ -57,7 +57,7 @@ export default async function CompanyDetailPage({
               Added {company.createdAt.toLocaleDateString("en-GB")}
             </p>
           </div>
-          <Link href={`/companies/${company.id}/edit`} className="border border-border px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors">
+          <Link href={`/companies/${company.id}/edit`} className="border border-border px-4 py-2 rounded-lg text-sm hover:bg-stone-50 transition-colors">
             Edit
           </Link>
         </div>
@@ -134,7 +134,7 @@ export default async function CompanyDetailPage({
                   <Link href={`/events/${e.id}/edit`} className="text-accent hover:underline text-sm">{e.name}</Link>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                     e.status === "attended" ? "bg-green-100 text-green-700" :
-                    e.status === "cancelled" ? "bg-gray-100 text-gray-500" :
+                    e.status === "cancelled" ? "bg-stone-100 text-stone-500" :
                     "bg-blue-100 text-blue-700"
                   }`}>{e.status}</span>
                 </div>
@@ -173,7 +173,7 @@ export default async function CompanyDetailPage({
                   a.type === "call" ? "bg-green-100 text-green-700" :
                   a.type === "meeting" ? "bg-purple-100 text-purple-700" :
                   a.type === "email" ? "bg-blue-100 text-blue-700" :
-                  "bg-gray-100 text-gray-600"
+                  "bg-stone-100 text-stone-600"
                 }`}>{a.type}</span>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{a.title}</p>

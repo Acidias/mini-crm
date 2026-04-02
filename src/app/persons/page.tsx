@@ -123,7 +123,7 @@ export default async function PersonsPage({
           <div className="bg-card-bg rounded-xl border border-border overflow-x-auto">
             <table className="w-full text-sm min-w-[900px]">
               <thead>
-                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-gray-50">
+                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
                   <th className="px-3 py-3 w-8">
                     <input type="checkbox" data-select-all className="rounded" />
                   </th>
@@ -150,7 +150,7 @@ export default async function PersonsPage({
                     !p.lastContactedAt ||
                     Date.now() - p.lastContactedAt.getTime() > 7 * 24 * 60 * 60 * 1000;
                   return (
-                    <tr key={p.id} className="border-t border-border hover:bg-gray-50/50">
+                    <tr key={p.id} className="border-t border-border hover:bg-stone-50/50">
                       <td className="px-3 py-2.5">
                         <input type="checkbox" name="ids" value={p.id} className="rounded" />
                       </td>

@@ -151,7 +151,7 @@ export default async function EmailsPage({
             return (
               <div
                 key={e.id}
-                className={`flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-gray-50/50 ${isUnread ? "bg-blue-50/30" : ""}`}
+                className={`flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-stone-50/50 ${isUnread ? "bg-blue-50/30" : ""}`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   isDraft
@@ -172,7 +172,7 @@ export default async function EmailsPage({
                         : e.toAddress}
                     </span>
                     {e.personName && (
-                      <span className="text-xs bg-gray-100 text-muted px-1.5 py-0.5 rounded flex-shrink-0">{e.personName}</span>
+                      <span className="text-xs bg-stone-100 text-muted px-1.5 py-0.5 rounded flex-shrink-0">{e.personName}</span>
                     )}
                     {isUnread && <span className="w-2 h-2 rounded-full bg-accent flex-shrink-0" />}
                   </div>

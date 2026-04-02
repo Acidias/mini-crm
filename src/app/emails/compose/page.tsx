@@ -112,7 +112,7 @@ export default async function ComposeEmailPage({
           {signature && (
             <div className="mt-2 border-t border-border pt-2">
               <p className="text-xs text-muted mb-1">Signature (auto-appended):</p>
-              <pre className="text-xs text-muted whitespace-pre-wrap font-mono bg-gray-50 rounded px-2 py-1.5">{signature}</pre>
+              <pre className="text-xs text-muted whitespace-pre-wrap font-mono bg-stone-50 rounded px-2 py-1.5">{signature}</pre>
             </div>
           )}
         </div>
@@ -126,13 +126,13 @@ export default async function ComposeEmailPage({
           <button
             type="submit"
             formAction={saveDraft}
-            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
           >
             Save as Draft
           </button>
           <Link
             href="/emails"
-            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-gray-50 transition-colors"
+            className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
           >
             Cancel
           </Link>
