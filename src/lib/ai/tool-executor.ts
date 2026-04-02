@@ -2,10 +2,11 @@ import { db } from "@/db";
 import {
   persons, companies, events, emails, todos, activities, tags, entityTags,
 } from "@/db/schema";
-import { eq, ilike, or, and, isNull, desc, asc, gte, lt, count } from "drizzle-orm";
+import { eq, ilike, or, and, isNull, desc, asc, gte, lt, count, sql } from "drizzle-orm";
 import { getResend, FROM_ADDRESSES, DEFAULT_FROM } from "@/lib/resend";
 import { getSetting } from "@/actions/settings";
 import * as cheerio from "cheerio";
+import { checkLinkedIn } from "@/lib/linkedin";
 
 type ToolResult = { success: boolean; data?: unknown; error?: string };
 type Input = Record<string, unknown>;
@@ -651,6 +652,38 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     const [deleted] = await db.delete(entityTags).where(eq(entityTags.id, id)).returning();
     if (!deleted) return { success: false, error: `Entity-tag with ID ${id} not found` };
     return { success: true, data: { id, removed: true } };
+  },
+
+  async linkedin_verify(input) {
+    const url = input.url as string;
+    if (!url) return { success: false, error: "URL is required" };
+    const result = await checkLinkedIn(url);
+    return { success: true, data: { url, valid: result.valid, status: result.status } };
+  },
+
+  async linkedin_verify_all() {
+    const allWithLinkedIn = await db
+      .select({ id: persons.id, name: persons.name, linkedin: persons.linkedin })
+      .from(persons)
+      .where(and(isNull(persons.deletedAt), sql`${persons.linkedin} IS NOT NULL AND ${persons.linkedin} != ''`));
+
+    const results: { id: number; name: string; linkedin: string; valid: boolean }[] = [];
+    for (const p of allWithLinkedIn) {
+      if (!p.linkedin) continue;
+      const check = await checkLinkedIn(p.linkedin);
+      results.push({ id: p.id, name: p.name, linkedin: p.linkedin, valid: check.valid });
+      await new Promise((r) => setTimeout(r, 500));
+    }
+
+    return {
+      success: true,
+      data: {
+        total: results.length,
+        valid: results.filter((r) => r.valid).length,
+        invalid: results.filter((r) => !r.valid),
+        all: results,
+      },
+    };
   },
 
   async navigate(input) {

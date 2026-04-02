@@ -476,6 +476,27 @@ export const allTools: Tool[] = [
       required: ["entity_tag_id"],
     },
   },
+  // ─── LINKEDIN VERIFICATION ───
+  {
+    name: "linkedin_verify",
+    description: "Verify a single LinkedIn profile URL to check if it exists. Returns whether the profile is valid or not.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        url: { type: "string", description: "LinkedIn profile URL to verify" },
+      },
+      required: ["url"],
+    },
+  },
+  {
+    name: "linkedin_verify_all",
+    description: "Bulk verify all LinkedIn URLs in the CRM. Checks every person who has a LinkedIn URL and returns which ones are valid and which are broken.",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
   // ─── NAVIGATION ───
   {
     name: "navigate",

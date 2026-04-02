@@ -62,6 +62,8 @@ const TOOL_LABELS: Record<string, string> = {
   tags_create: "Create Tag",
   tags_add_to_entity: "Add Tag",
   tags_remove_from_entity: "Remove Tag",
+  linkedin_verify: "Verify LinkedIn",
+  linkedin_verify_all: "Verify All LinkedIn",
   navigate: "Navigate",
 };
 
