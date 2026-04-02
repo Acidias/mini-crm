@@ -21,6 +21,7 @@ type Session = {
   id: number;
   title: string;
   status: string;
+  lastMessageAt: string;
   updatedAt: string;
 };
 
@@ -197,7 +198,7 @@ export default function AIChatPage() {
     });
     if (res.ok) {
       const session = await res.json();
-      setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", updatedAt: session.updatedAt }, ...prev]);
+      setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", lastMessageAt: session.lastMessageAt || session.updatedAt, updatedAt: session.updatedAt }, ...prev]);
       setActiveSessionId(session.id);
       setMessages([]);
       inputRef.current?.focus();
@@ -264,6 +265,24 @@ export default function AIChatPage() {
     setEditingTitle(null);
   }
 
+  async function generateTitle(sessionId: number, firstMessage: string) {
+    try {
+      const res = await fetch("/api/ai/title", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: firstMessage, apiKey }),
+      });
+      if (res.ok) {
+        const { title } = await res.json();
+        renameSession(sessionId, title);
+      }
+    } catch {
+      // Fall back to truncated message
+      const fallback = firstMessage.length > 50 ? firstMessage.slice(0, 50) + "..." : firstMessage;
+      renameSession(sessionId, fallback);
+    }
+  }
+
   function saveKey() {
     const key = keyInput.trim();
     if (!key) return;
@@ -293,7 +312,7 @@ export default function AIChatPage() {
         const session = await res.json();
         sessionId = session.id;
         setActiveSessionId(session.id);
-        setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", updatedAt: session.updatedAt }, ...prev]);
+        setSessions((prev) => [{ id: session.id, title: session.title, status: session.status || "idle", lastMessageAt: session.lastMessageAt || session.updatedAt, updatedAt: session.updatedAt }, ...prev]);
       }
     }
 
@@ -398,11 +417,10 @@ export default function AIChatPage() {
       // Save to DB after stream completes
       if (sessionId) {
         saveMessages(sessionId, finalMessages);
-        // Auto-title from first user message
+        // Auto-generate title from first user message using LLM
         const currentSession = sessions.find((s) => s.id === sessionId);
         if (currentSession?.title === "New Chat" && text.length > 0) {
-          const title = text.length > 50 ? text.slice(0, 50) + "..." : text;
-          renameSession(sessionId, title);
+          generateTitle(sessionId, text);
         }
       }
     } catch (err) {
@@ -492,58 +510,68 @@ export default function AIChatPage() {
           {sessions.map((s) => (
             <div
               key={s.id}
-              className={`group flex items-center gap-1 rounded-lg px-3 py-2 text-sm cursor-pointer transition-colors ${
+              className={`group relative rounded-lg transition-colors ${
                 activeSessionId === s.id
-                  ? "bg-accent/10 text-accent"
-                  : "text-muted hover:bg-gray-100"
+                  ? "bg-accent/10"
+                  : "hover:bg-gray-100"
               }`}
             >
               {editingTitle === s.id ? (
-                <input
-                  autoFocus
-                  value={titleInput}
-                  onChange={(e) => setTitleInput(e.target.value)}
-                  onBlur={() => renameSession(s.id, titleInput)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") renameSession(s.id, titleInput);
-                    if (e.key === "Escape") setEditingTitle(null);
-                  }}
-                  className="flex-1 bg-transparent border-b border-accent outline-none text-xs"
-                />
+                <div className="px-3 py-2">
+                  <input
+                    autoFocus
+                    value={titleInput}
+                    onChange={(e) => setTitleInput(e.target.value)}
+                    onBlur={() => renameSession(s.id, titleInput)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") renameSession(s.id, titleInput);
+                      if (e.key === "Escape") setEditingTitle(null);
+                    }}
+                    className="w-full bg-white border border-accent rounded px-2 py-1 outline-none text-xs shadow-sm"
+                  />
+                </div>
               ) : (
-                <button
-                  onClick={() => selectSession(s.id)}
-                  className="flex-1 text-left truncate text-xs flex items-center gap-1.5"
-                >
-                  {s.status === "working" && (
-                    <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse flex-shrink-0" />
-                  )}
-                  {s.title}
-                </button>
+                <div className="flex items-center">
+                  <button
+                    onClick={() => selectSession(s.id)}
+                    className={`flex-1 text-left truncate text-xs px-3 py-2 flex items-center gap-1.5 ${
+                      activeSessionId === s.id ? "text-accent" : "text-muted"
+                    }`}
+                  >
+                    {s.status === "working" && (
+                      <span className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse flex-shrink-0" />
+                    )}
+                    {s.title}
+                  </button>
+                  <div className="hidden group-hover:flex items-center gap-0.5 pr-1.5 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingTitle(s.id);
+                        setTitleInput(s.title);
+                      }}
+                      className="p-1 rounded hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Rename"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11.5 1.5l3 3L5 14H2v-3L11.5 1.5z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteSession(s.id);
+                      }}
+                      className="p-1 rounded hover:bg-red-100 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Delete"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M2 4h12M5.33 4V2.67a1.33 1.33 0 011.34-1.34h2.66a1.33 1.33 0 011.34 1.34V4m2 0v9.33a1.33 1.33 0 01-1.34 1.34H4.67a1.33 1.33 0 01-1.34-1.34V4h9.34z" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
               )}
-              <div className="hidden group-hover:flex gap-1 flex-shrink-0">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditingTitle(s.id);
-                    setTitleInput(s.title);
-                  }}
-                  className="text-muted hover:text-foreground text-[10px]"
-                  title="Rename"
-                >
-                  &#9998;
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteSession(s.id);
-                  }}
-                  className="text-muted hover:text-danger text-[10px]"
-                  title="Delete"
-                >
-                  &times;
-                </button>
-              </div>
             </div>
           ))}
           {sessions.length === 0 && (

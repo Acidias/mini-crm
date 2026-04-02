@@ -60,9 +60,9 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // Mark session as working
+      // Mark session as working and update lastMessageAt
       if (sessionId) {
-        await db.update(chatSessions).set({ status: "working" }).where(eq(chatSessions.id, sessionId));
+        await db.update(chatSessions).set({ status: "working", lastMessageAt: new Date() }).where(eq(chatSessions.id, sessionId));
       }
 
       try {

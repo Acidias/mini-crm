@@ -34,9 +34,9 @@ export async function GET(req: NextRequest) {
   await resetStaleSessions();
 
   const sessions = await db
-    .select({ id: chatSessions.id, title: chatSessions.title, status: chatSessions.status, updatedAt: chatSessions.updatedAt })
+    .select({ id: chatSessions.id, title: chatSessions.title, status: chatSessions.status, lastMessageAt: chatSessions.lastMessageAt, updatedAt: chatSessions.updatedAt })
     .from(chatSessions)
-    .orderBy(desc(chatSessions.updatedAt));
+    .orderBy(desc(chatSessions.lastMessageAt));
 
   return NextResponse.json(sessions);
 }
