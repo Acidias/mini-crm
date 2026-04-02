@@ -461,4 +461,16 @@ export const allTools: Tool[] = [
       required: ["entity_tag_id"],
     },
   },
+  // ─── NAVIGATION ───
+  {
+    name: "navigate",
+    description: "Navigate the user to a page in the Mini CRM. Use this when the user asks to see, open, go to, or view a page. Available pages: dashboard (/), ai chat (/ai), emails (/emails), compose email (/emails/compose), persons (/persons), new person (/persons/new), person detail (/persons/{id}), companies (/companies), new company (/companies/new), company detail (/companies/{id}), events (/events), new event (/events/new), todos (/todos), new todo (/todos/new), calendar (/calendar), trash (/trash), profile (/profile).",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        url: { type: "string", description: "The URL path to navigate to, e.g. '/persons', '/companies/5', '/emails/compose'" },
+      },
+      required: ["url"],
+    },
+  },
 ];

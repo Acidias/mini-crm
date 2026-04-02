@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import { dispatchTokenUsage } from "@/lib/token-usage";
-import { AI_COMMAND_EVENT } from "@/lib/voice-commands";
+import { AI_COMMAND_EVENT, dispatchNavigate } from "@/lib/voice-commands";
 
 type ToolCall = {
   id: string;
@@ -61,6 +61,7 @@ const TOOL_LABELS: Record<string, string> = {
   tags_create: "Create Tag",
   tags_add_to_entity: "Add Tag",
   tags_remove_from_entity: "Remove Tag",
+  navigate: "Navigate",
 };
 
 export default function AIChatPage() {
@@ -391,6 +392,10 @@ export default function AIChatPage() {
               case "tool_result": {
                 const tc = toolCalls.find((t) => t.id === event.id);
                 if (tc) tc.result = event.result;
+                // Handle navigate tool - trigger client-side navigation
+                if (event.name === "navigate" && event.result?.success && event.result?.data?.url) {
+                  dispatchNavigate(event.result.data.url);
+                }
                 toolCalls = [...toolCalls];
                 finalMessages = [
                   ...newMessages,

@@ -634,6 +634,12 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     if (!deleted) return { success: false, error: `Entity-tag with ID ${id} not found` };
     return { success: true, data: { id, removed: true } };
   },
+
+  async navigate(input) {
+    const url = input.url as string;
+    if (!url || !url.startsWith("/")) return { success: false, error: "Invalid URL path - must start with /" };
+    return { success: true, data: { url } };
+  },
 };
 
 // ─── Public executor ───

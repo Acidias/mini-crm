@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { matchNavigationCommand, dispatchAICommand } from "@/lib/voice-commands";
+import { dispatchAICommand, NAVIGATE_EVENT } from "@/lib/voice-commands";
 
 interface SpeechRecognitionInstance extends EventTarget {
   continuous: boolean;
@@ -34,10 +34,20 @@ export function VoiceControl() {
     setSupported(!!SR);
   }, []);
 
+  // Listen for AI-triggered navigation events
+  useEffect(() => {
+    function handleNavigate(e: Event) {
+      const url = (e as CustomEvent<string>).detail;
+      if (url) router.push(url);
+    }
+    window.addEventListener(NAVIGATE_EVENT, handleNavigate);
+    return () => window.removeEventListener(NAVIGATE_EVENT, handleNavigate);
+  }, [router]);
+
   const showFeedback = useCallback((msg: string) => {
     setFeedback(msg);
     if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
-    feedbackTimeoutRef.current = setTimeout(() => setFeedback(null), 2500);
+    feedbackTimeoutRef.current = setTimeout(() => setFeedback(null), 3000);
   }, []);
 
   const handleResult = useCallback((e: Event) => {
@@ -54,16 +64,17 @@ export function VoiceControl() {
 
     if (!text) return;
 
-    const route = matchNavigationCommand(text);
-    if (route) {
-      showFeedback(`Navigating: ${text}`);
-      router.push(route);
-    } else {
-      showFeedback(`AI: ${text}`);
-      dispatchAICommand(text);
-      router.push("/ai");
-    }
-  }, [router, showFeedback]);
+    // Add page context so the AI knows what the user is looking at
+    const path = window.location.pathname;
+    let context = "";
+    const personMatch = path.match(/^\/persons\/(\d+)/);
+    const companyMatch = path.match(/^\/companies\/(\d+)/);
+    if (personMatch) context = `[Currently viewing person ID ${personMatch[1]}] `;
+    else if (companyMatch) context = `[Currently viewing company ID ${companyMatch[1]}] `;
+
+    showFeedback(`Sending to AI: "${text}"`);
+    dispatchAICommand(context + text);
+  }, [showFeedback]);
 
   const startListening = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -77,13 +88,8 @@ export function VoiceControl() {
     recognition.addEventListener("result", handleResult);
 
     recognition.addEventListener("end", () => {
-      // Auto-restart if still supposed to be listening (handles ~60s timeout)
       if (listeningRef.current) {
-        try {
-          recognition.start();
-        } catch {
-          // Already started or error - ignore
-        }
+        try { recognition.start(); } catch { /* already started */ }
       }
     });
 
@@ -94,18 +100,13 @@ export function VoiceControl() {
         setListening(false);
         listeningRef.current = false;
       }
-      // "no-speech" and "aborted" are normal during continuous listening
     });
 
     recognitionRef.current = recognition;
     listeningRef.current = true;
     setListening(true);
 
-    try {
-      recognition.start();
-    } catch {
-      // Already started
-    }
+    try { recognition.start(); } catch { /* already started */ }
   }, [handleResult, showFeedback]);
 
   const stopListening = useCallback(() => {
@@ -113,16 +114,11 @@ export function VoiceControl() {
     setListening(false);
     setTranscript("");
     if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        // Already stopped
-      }
+      try { recognitionRef.current.stop(); } catch { /* already stopped */ }
       recognitionRef.current = null;
     }
   }, []);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       listeningRef.current = false;
