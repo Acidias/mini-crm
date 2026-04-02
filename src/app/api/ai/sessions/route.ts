@@ -2,7 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { authenticateRequest } from "@/lib/api-auth";
 import { db } from "@/db";
 import { chatSessions } from "@/db/schema";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, lt } from "drizzle-orm";
+
+const STALE_WORKING_MINUTES = 5;
+
+// Reset sessions stuck as "working" for too long (e.g. serverless function killed mid-stream)
+async function resetStaleSessions() {
+  const cutoff = new Date(Date.now() - STALE_WORKING_MINUTES * 60 * 1000);
+  await db
+    .update(chatSessions)
+    .set({ status: "idle", updatedAt: new Date() })
+    .where(and(eq(chatSessions.status, "working"), lt(chatSessions.updatedAt, cutoff)));
+}
 
 // GET - list sessions, or get a single session with messages via ?get=id
 export async function GET(req: NextRequest) {
@@ -18,6 +29,9 @@ export async function GET(req: NextRequest) {
     if (!chatSession) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(chatSession);
   }
+
+  // Clean up stale "working" sessions before listing
+  await resetStaleSessions();
 
   const sessions = await db
     .select({ id: chatSessions.id, title: chatSessions.title, status: chatSessions.status, updatedAt: chatSessions.updatedAt })
