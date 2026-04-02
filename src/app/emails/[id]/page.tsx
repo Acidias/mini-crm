@@ -3,9 +3,10 @@ import { db } from "@/db";
 import { emails, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
-import { markEmailRead, deleteEmail } from "@/actions/emails";
+import { deleteEmail } from "@/actions/emails";
 import ConfirmDelete from "@/components/confirm-delete";
 import HtmlEmailBody from "./html-body";
+import MarkAsRead from "./mark-read";
 
 export default async function ViewEmailPage({
   params,
@@ -19,11 +20,6 @@ export default async function ViewEmailPage({
     .where(eq(emails.id, parseInt(id)));
 
   if (!email) notFound();
-
-  // Mark as read if inbound and unread
-  if (email.direction === "inbound" && !email.read) {
-    await markEmailRead(email.id);
-  }
 
   // Get linked person if any
   let linkedPerson: { id: number; name: string } | null = null;
@@ -40,6 +36,7 @@ export default async function ViewEmailPage({
 
   return (
     <div className="max-w-3xl">
+      {isInbound && !email.read && <MarkAsRead emailId={email.id} />}
       <div className="mb-6">
         <Link href="/emails" className="text-muted text-sm hover:text-foreground">
           &larr; Back to Emails

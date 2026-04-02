@@ -14,9 +14,9 @@ export async function POST(req: NextRequest) {
     if (type === "email.received") {
       const from = data.from;
       const to = data.to?.[0] || data.to;
-      const subject = data.subject || "(No subject)";
-      const text = data.text || "";
-      const html = data.html || "";
+      const subject = data.subject || null;
+      const text = data.text || null;
+      const html = data.html || null;
 
       // Try to match sender to a person in the CRM
       let personId: number | null = null;
