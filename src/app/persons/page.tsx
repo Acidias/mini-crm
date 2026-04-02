@@ -134,6 +134,7 @@ export default async function PersonsPage({
                   <th className="px-5 py-3 font-medium">
                     <SortHeader label="Email" field="email" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
+                  <th className="px-5 py-3 font-medium">LinkedIn</th>
                   <th className="px-5 py-3 font-medium">
                     <SortHeader label="Last Contacted" field="lastContacted" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
@@ -158,6 +159,15 @@ export default async function PersonsPage({
                       <td className="px-5 py-3 text-muted">{p.position || "-"}</td>
                       <td className="px-5 py-3 text-muted">{p.companyName || "-"}</td>
                       <td className="px-5 py-3 text-muted">{p.email || "-"}</td>
+                      <td className="px-5 py-3">
+                        {p.linkedin ? (
+                          <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="text-accent text-xs hover:underline">
+                            {p.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "").slice(0, 20)}
+                          </a>
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </td>
                       <td className="px-5 py-3">
                         <span className={isStale ? "text-danger font-medium" : "text-success"}>
                           {timeAgo(p.lastContactedAt)}
