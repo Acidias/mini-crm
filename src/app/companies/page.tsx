@@ -1,26 +1,28 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies, persons } from "@/db/schema";
-import { desc, eq, asc, ilike, or, count, sql, isNull, and } from "drizzle-orm";
+import { desc, eq, asc, ilike, or, count, sql, isNull, isNotNull, and, not } from "drizzle-orm";
 import { deleteCompany } from "@/actions/companies";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
 import SortHeader from "@/components/sort-header";
 import BulkActions from "@/components/bulk-actions";
 import ConfirmDelete from "@/components/confirm-delete";
+import FieldFilter from "@/components/field-filter";
 
 export const dynamic = "force-dynamic";
 
 export default async function CompaniesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sort?: string; order?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; order?: string; page?: string; filter?: string | string[] }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
   const sortField = params.sort || "name";
   const sortOrder = params.order || "asc";
   const page = Math.max(1, parseInt(params.page || "1"));
+  const filters = Array.isArray(params.filter) ? params.filter : params.filter ? [params.filter] : [];
 
   const searchFilter = query
     ? or(
@@ -30,9 +32,24 @@ export default async function CompaniesPage({
         ilike(companies.website, `%${query}%`)
       )
     : undefined;
-  const whereClause = searchFilter
-    ? and(isNull(companies.deletedAt), searchFilter)
-    : isNull(companies.deletedAt);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fieldMap: Record<string, any> = {
+    "has:email": and(isNotNull(companies.email), not(sql`${companies.email} = ''`)),
+    "missing:email": or(isNull(companies.email), sql`${companies.email} = ''`),
+    "has:phone": and(isNotNull(companies.phone), not(sql`${companies.phone} = ''`)),
+    "missing:phone": or(isNull(companies.phone), sql`${companies.phone} = ''`),
+    "has:website": and(isNotNull(companies.website), not(sql`${companies.website} = ''`)),
+    "missing:website": or(isNull(companies.website), sql`${companies.website} = ''`),
+    "has:industry": and(isNotNull(companies.industry), not(sql`${companies.industry} = ''`)),
+    "missing:industry": or(isNull(companies.industry), sql`${companies.industry} = ''`),
+    "has:address": and(isNotNull(companies.address), not(sql`${companies.address} = ''`)),
+    "missing:address": or(isNull(companies.address), sql`${companies.address} = ''`),
+  };
+  const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
+
+  const conditions = [isNull(companies.deletedAt), searchFilter, ...fieldFilters].filter(Boolean);
+  const whereClause = and(...conditions);
 
   const [totalResult] = await db.select({ value: count() }).from(companies).where(whereClause);
   const total = totalResult.value;
@@ -69,6 +86,19 @@ export default async function CompaniesPage({
   if (sortField !== "name") sp.sort = sortField;
   if (sortOrder !== "asc") sp.order = sortOrder;
 
+  const companyFilterOptions = [
+    { label: "Has email", value: "has:email" },
+    { label: "Missing email", value: "missing:email" },
+    { label: "Has phone", value: "has:phone" },
+    { label: "Missing phone", value: "missing:phone" },
+    { label: "Has website", value: "has:website" },
+    { label: "Missing website", value: "missing:website" },
+    { label: "Has industry", value: "has:industry" },
+    { label: "Missing industry", value: "missing:industry" },
+    { label: "Has address", value: "has:address" },
+    { label: "Missing address", value: "missing:address" },
+  ];
+
   return (
     <div className="max-w-6xl">
       <div className="flex items-center justify-between mb-6">
@@ -78,6 +108,7 @@ export default async function CompaniesPage({
         </div>
         <div className="flex gap-3 items-center">
           <SearchInput placeholder="Search companies..." />
+          <FieldFilter options={companyFilterOptions} />
           <Link href="/companies/new" className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors">
             + Add Company
           </Link>

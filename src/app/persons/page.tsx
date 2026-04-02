@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { persons, companies } from "@/db/schema";
-import { desc, eq, asc, ilike, or, sql, count, isNull, and } from "drizzle-orm";
+import { desc, eq, asc, ilike, or, sql, count, isNull, isNotNull, and, not } from "drizzle-orm";
 import { deletePerson, markAsContacted } from "@/actions/persons";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
@@ -9,6 +9,7 @@ import SortHeader from "@/components/sort-header";
 import BulkActions from "@/components/bulk-actions";
 import ConfirmDelete from "@/components/confirm-delete";
 import VerifyLinkedInButton from "@/components/verify-linkedin-button";
+import FieldFilter from "@/components/field-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -37,13 +38,14 @@ const sortColumns: Record<string, any> = {
 export default async function PersonsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sort?: string; order?: string; page?: string }>;
+  searchParams: Promise<{ q?: string; sort?: string; order?: string; page?: string; filter?: string | string[] }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
   const sortField = params.sort || "name";
   const sortOrder = params.order || "asc";
   const page = Math.max(1, parseInt(params.page || "1"));
+  const filters = Array.isArray(params.filter) ? params.filter : params.filter ? [params.filter] : [];
 
   const searchFilter = query
     ? or(
@@ -53,9 +55,25 @@ export default async function PersonsPage({
         ilike(persons.phone, `%${query}%`)
       )
     : undefined;
-  const whereClause = searchFilter
-    ? and(isNull(persons.deletedAt), searchFilter)
-    : isNull(persons.deletedAt);
+
+  // Field presence/absence filters
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fieldMap: Record<string, any> = {
+    "has:email": and(isNotNull(persons.email), not(sql`${persons.email} = ''`)),
+    "missing:email": or(isNull(persons.email), sql`${persons.email} = ''`),
+    "has:phone": and(isNotNull(persons.phone), not(sql`${persons.phone} = ''`)),
+    "missing:phone": or(isNull(persons.phone), sql`${persons.phone} = ''`),
+    "has:linkedin": and(isNotNull(persons.linkedin), not(sql`${persons.linkedin} = ''`)),
+    "missing:linkedin": or(isNull(persons.linkedin), sql`${persons.linkedin} = ''`),
+    "has:company": isNotNull(persons.companyId),
+    "missing:company": isNull(persons.companyId),
+    "has:position": and(isNotNull(persons.position), not(sql`${persons.position} = ''`)),
+    "missing:position": or(isNull(persons.position), sql`${persons.position} = ''`),
+  };
+  const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
+
+  const conditions = [isNull(persons.deletedAt), searchFilter, ...fieldFilters].filter(Boolean);
+  const whereClause = and(...conditions);
 
   const [totalResult] = await db
     .select({ value: count() })
@@ -90,6 +108,19 @@ export default async function PersonsPage({
   if (sortField !== "name") sp.sort = sortField;
   if (sortOrder !== "asc") sp.order = sortOrder;
 
+  const personFilterOptions = [
+    { label: "Has email", value: "has:email" },
+    { label: "Missing email", value: "missing:email" },
+    { label: "Has phone", value: "has:phone" },
+    { label: "Missing phone", value: "missing:phone" },
+    { label: "Has LinkedIn", value: "has:linkedin" },
+    { label: "Missing LinkedIn", value: "missing:linkedin" },
+    { label: "Has company", value: "has:company" },
+    { label: "No company", value: "missing:company" },
+    { label: "Has position", value: "has:position" },
+    { label: "Missing position", value: "missing:position" },
+  ];
+
   return (
     <div>
       {/* Header */}
@@ -100,6 +131,7 @@ export default async function PersonsPage({
         </div>
         <div className="flex gap-2 items-center">
           <SearchInput placeholder="Search persons..." />
+          <FieldFilter options={personFilterOptions} />
           <VerifyLinkedInButton />
           <Link
             href="/persons/new"
