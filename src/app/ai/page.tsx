@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
+import { dispatchTokenUsage } from "@/lib/token-usage";
 
 type ToolCall = {
   id: string;
@@ -375,6 +376,9 @@ export default function AIChatPage() {
               }
               case "progress":
                 setProgress({ completed: event.completed, max: event.max });
+                break;
+              case "usage":
+                dispatchTokenUsage(event.usage);
                 break;
               case "error":
                 assistantText += `\n\nError: ${event.message}`;

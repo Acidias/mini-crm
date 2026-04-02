@@ -121,6 +121,17 @@ export async function POST(req: NextRequest) {
 
           const finalMessage = await messageStream.finalMessage();
 
+          // Send token usage after each API call for live tracking
+          send({
+            type: "usage",
+            usage: {
+              input_tokens: finalMessage.usage.input_tokens,
+              output_tokens: finalMessage.usage.output_tokens,
+              cache_creation_input_tokens: finalMessage.usage.cache_creation_input_tokens ?? 0,
+              cache_read_input_tokens: finalMessage.usage.cache_read_input_tokens ?? 0,
+            },
+          });
+
           const toolUseBlocks = finalMessage.content.filter(
             (block): block is Anthropic.Messages.ToolUseBlock => block.type === "tool_use"
           );
