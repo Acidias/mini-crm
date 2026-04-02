@@ -2,21 +2,37 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { emails, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { getResend } from "@/lib/resend";
 
 export async function POST(req: NextRequest) {
   try {
     const payload = await req.json();
-
-    // Resend inbound email webhook payload
-    // See: https://resend.com/docs/dashboard/webhooks/introduction
     const { type, data } = payload;
 
     if (type === "email.received") {
+      const emailId = data.email_id;
       const from = data.from;
       const to = data.to?.[0] || data.to;
       const subject = data.subject || null;
-      const text = data.text || null;
-      const html = data.html || null;
+
+      // Fetch full email content from Resend API
+      // Webhooks only contain metadata, not the body
+      let bodyText: string | null = null;
+      let bodyHtml: string | null = null;
+
+      if (emailId) {
+        try {
+          const resend = getResend();
+          const fullEmail = await resend.emails.get(emailId);
+          if (fullEmail.data) {
+            const emailData = fullEmail.data as unknown as Record<string, string>;
+            bodyText = emailData.text || null;
+            bodyHtml = emailData.html || null;
+          }
+        } catch {
+          // If fetch fails, store without body - better than losing the email entirely
+        }
+      }
 
       // Try to match sender to a person in the CRM
       let personId: number | null = null;
@@ -30,13 +46,13 @@ export async function POST(req: NextRequest) {
       }
 
       await db.insert(emails).values({
-        resendId: data.email_id || null,
+        resendId: emailId || null,
         direction: "inbound",
         fromAddress: from,
         toAddress: typeof to === "string" ? to : to?.toString() || "",
         subject,
-        bodyText: text,
-        bodyHtml: html,
+        bodyText,
+        bodyHtml,
         personId,
         read: false,
       });
