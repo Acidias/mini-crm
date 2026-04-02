@@ -6,6 +6,7 @@ import { sendEmail, saveDraft } from "@/actions/emails";
 import { FROM_ADDRESSES } from "@/lib/resend";
 import { getSetting } from "@/actions/settings";
 import AiRewrite from "./ai-rewrite";
+import { Refreshable } from "@/components/refreshable";
 
 export default async function ComposeEmailPage({
   searchParams,
@@ -57,6 +58,7 @@ export default async function ComposeEmailPage({
         </h1>
       </div>
 
+      <Refreshable>
       <form id="compose-form" action={sendEmail} className="bg-card-bg rounded-xl border border-border p-6 space-y-5">
         {draft && <input type="hidden" name="draftId" value={draft.id} />}
         <div className="grid grid-cols-2 gap-4">
@@ -136,6 +138,7 @@ export default async function ComposeEmailPage({
           </Link>
         </div>
       </form>
+      </Refreshable>
     </div>
   );
 }

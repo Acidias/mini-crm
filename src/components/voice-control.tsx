@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { dispatchTokenUsage } from "@/lib/token-usage";
+import { dispatchContentUpdated } from "@/components/refreshable";
 
 interface SpeechRecognitionInstance extends EventTarget {
   continuous: boolean;
@@ -126,6 +127,7 @@ export function VoiceControl() {
                 // If tools were used (data changed), refresh the current page
                 if (usedTools && !navigated) {
                   router.refresh();
+                  dispatchContentUpdated();
                 }
                 if (navigated) {
                   clearToast(500);
