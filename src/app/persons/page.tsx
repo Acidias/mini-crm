@@ -75,6 +75,7 @@ export default async function PersonsPage({
       position: persons.position,
       linkedin: persons.linkedin,
       lastContactedAt: persons.lastContactedAt,
+      companyId: persons.companyId,
       companyName: companies.name,
     })
     .from(persons)
@@ -170,8 +171,8 @@ export default async function PersonsPage({
                         <span className="truncate block max-w-[160px]">{p.position || "-"}</span>
                       </td>
                       <td className="px-4 py-3">
-                        {p.companyName ? (
-                          <span className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md font-medium">{p.companyName}</span>
+                        {p.companyId && p.companyName ? (
+                          <Link href={`/companies/${p.companyId}`} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md font-medium hover:bg-stone-200 hover:text-accent transition-colors">{p.companyName}</Link>
                         ) : (
                           <span className="text-muted">-</span>
                         )}
