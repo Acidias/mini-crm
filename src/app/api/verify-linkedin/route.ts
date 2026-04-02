@@ -13,38 +13,60 @@ async function checkLinkedIn(url: string): Promise<{ valid: boolean; status: num
       return { valid: false, status: 0 };
     }
 
+    // Basic URL format validation - must be /in/username pattern
+    const pathMatch = normalised.match(/linkedin\.com\/in\/([a-zA-Z0-9_-]+)/);
+    if (!pathMatch) {
+      return { valid: false, status: 0 };
+    }
+
     const res = await fetch(normalised, {
       method: "GET",
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
       },
       redirect: "follow",
       signal: AbortSignal.timeout(10000),
     });
 
-    const finalUrl = res.url;
-    const isLoginRedirect = finalUrl.includes("/login") || finalUrl.includes("/authwall");
-
     if (res.status === 404 || res.status === 410) {
       return { valid: false, status: res.status };
     }
 
-    // LinkedIn often returns 200 for soft-404 pages - check body content
-    if (res.status === 200 && !isLoginRedirect) {
-      const body = await res.text();
-      // LinkedIn soft-404 indicators
-      const isSoft404 =
-        body.includes("Page not found") ||
-        body.includes("page-not-found") ||
-        body.includes("profile-unavailable") ||
-        body.includes("This page doesn\u2019t exist") ||
-        body.includes("This page doesn't exist") ||
-        body.includes('"statusCode":404');
-      return { valid: !isSoft404, status: res.status };
-    }
+    // Always read the body - LinkedIn returns 200 for both valid profiles,
+    // soft-404 pages, and auth walls. We need to check the content.
+    const body = await res.text();
 
-    // 999 = LinkedIn rate limit/block, 302 = auth redirect - inconclusive, treat as valid
-    return { valid: true, status: res.status, redirected: isLoginRedirect ? "login" : undefined };
+    // Soft-404 indicators (page doesn't exist)
+    const isSoft404 =
+      body.includes("Page not found") ||
+      body.includes("page-not-found") ||
+      body.includes("profile-unavailable") ||
+      body.includes("This page doesn\u2019t exist") ||
+      body.includes("This page doesn't exist") ||
+      body.includes('"statusCode":404');
+    if (isSoft404) return { valid: false, status: res.status };
+
+    // Real profiles have og:title with the person's name or profile-specific metadata
+    const hasProfileMeta =
+      body.includes('og:type" content="profile"') ||
+      body.includes("pv-top-card") ||
+      body.includes("profile-section") ||
+      body.includes('"@type":"Person"');
+    if (hasProfileMeta) return { valid: true, status: res.status };
+
+    // Auth wall / login redirect - no profile metadata visible.
+    // Check if the auth wall page contains any reference to the profile slug
+    // (LinkedIn embeds the target profile name even on the auth wall)
+    const slug = pathMatch[1].toLowerCase();
+    const bodyLower = body.toLowerCase();
+    const hasSlugReference = bodyLower.includes(slug.replace(/-/g, " ")) ||
+      bodyLower.includes(`/in/${slug}`);
+    if (hasSlugReference) return { valid: true, status: res.status };
+
+    // No profile indicators found - likely invalid
+    return { valid: false, status: res.status, redirected: "login" };
   } catch {
     return { valid: false, status: 0 };
   }
