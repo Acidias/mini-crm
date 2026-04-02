@@ -29,8 +29,9 @@ export async function POST(req: NextRequest) {
             bodyText = fullEmail.data.text || null;
             bodyHtml = fullEmail.data.html || null;
           }
-        } catch {
-          // If fetch fails, store without body - better than losing the email entirely
+        } catch (fetchErr) {
+          console.error("Failed to fetch received email content:", emailId, fetchErr);
+          // Store without body - better than losing the email entirely
         }
       }
 

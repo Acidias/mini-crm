@@ -90,12 +90,14 @@ export default async function ViewEmailPage({
 
         {/* Body */}
         <div className="px-6 py-5">
-          {email.bodyHtml ? (
+          {email.bodyHtml && email.bodyHtml.length > 0 ? (
             <HtmlEmailBody html={email.bodyHtml} />
-          ) : (
+          ) : email.bodyText && email.bodyText.length > 0 ? (
             <pre className="text-sm whitespace-pre-wrap font-sans leading-relaxed">
-              {email.bodyText || "(Empty message)"}
+              {email.bodyText}
             </pre>
+          ) : (
+            <p className="text-muted text-sm">(Empty message)</p>
           )}
         </div>
 
