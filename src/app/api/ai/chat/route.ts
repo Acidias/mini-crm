@@ -227,14 +227,38 @@ export async function POST(req: NextRequest) {
           await saveSession(sessionId, finalSave, "idle");
         }
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Unknown error";
-        if (message.includes("authentication") || message.includes("invalid x-api-key") || message.includes("Invalid API Key")) {
-          send({ type: "error", message: "Invalid API key. Please check your Claude API key." });
-        } else if (message.includes("rate_limit") || message.includes("429")) {
-          send({ type: "error", message: "Rate limited. Please wait a moment and try again." });
+        let userMessage: string;
+
+        if (err instanceof Anthropic.AuthenticationError) {
+          userMessage = "Invalid API key. Please check your Claude API key and try again.";
+        } else if (err instanceof Anthropic.PermissionDeniedError) {
+          userMessage = "Permission denied. Your API key may not have access to this model.";
+        } else if (err instanceof Anthropic.RateLimitError) {
+          userMessage = "Rate limited. Please wait a moment and try again.";
+        } else if (err instanceof Anthropic.BadRequestError) {
+          userMessage = `Bad request: ${err.message}`;
+        } else if (err instanceof Anthropic.InternalServerError) {
+          const errorType = (err.error as { error?: { type?: string } })?.error?.type;
+          if (errorType === "overloaded_error") {
+            userMessage = "Claude is currently overloaded. Please try again in a few moments.";
+          } else {
+            userMessage = "Anthropic API server error. Please try again shortly.";
+          }
+        } else if (err instanceof Anthropic.APIConnectionError) {
+          userMessage = "Could not connect to the Anthropic API. Check your network connection.";
+        } else if (err instanceof Anthropic.APIError) {
+          const errorBody = err.error as { error?: { type?: string; message?: string } } | undefined;
+          const errorType = errorBody?.error?.type;
+          if (errorType === "billing_error") {
+            userMessage = "Billing issue - your Anthropic account may have no credits or an expired plan.";
+          } else {
+            userMessage = `Anthropic API error (${err.status}): ${errorBody?.error?.message || err.message}`;
+          }
         } else {
-          send({ type: "error", message });
+          userMessage = err instanceof Error ? err.message : "Unknown error";
         }
+
+        send({ type: "error", message: userMessage });
         // Mark idle on error too
         if (sessionId) await markIdle(sessionId);
       } finally {
