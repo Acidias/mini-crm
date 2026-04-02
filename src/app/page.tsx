@@ -107,26 +107,37 @@ export default async function Home() {
     .orderBy(asc(todos.dueDate))
     .limit(5);
 
+  const stats = [
+    { label: "Persons", value: personCount.value, color: "bg-teal-500/10 text-teal-600", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg> },
+    { label: "Companies", value: companyCount.value, color: "bg-violet-500/10 text-violet-600", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg> },
+    { label: "Contacted (7d)", value: recentlyContactedCount.value, color: "bg-emerald-500/10 text-emerald-600", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> },
+    { label: "Never Contacted", value: neverContactedCount.value, color: "bg-rose-500/10 text-rose-600", icon: <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
+  ];
+
   return (
     <div className="max-w-6xl">
+      {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted text-sm mt-0.5">Overview of your contacts and activities</p>
+        </div>
         <div className="flex gap-2">
           <Link
             href="/persons/new"
-            className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+            className="bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm"
           >
             + Add Person
           </Link>
           <Link
             href="/events/new"
-            className="bg-white text-foreground border border-border px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+            className="bg-card-bg text-foreground border border-border px-4 py-2 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors"
           >
             + Add Event
           </Link>
           <Link
             href="/companies/new"
-            className="bg-white text-foreground border border-border px-4 py-2 rounded-lg text-sm hover:bg-gray-50 transition-colors"
+            className="bg-card-bg text-foreground border border-border px-4 py-2 rounded-lg text-sm font-medium hover:bg-stone-50 transition-colors"
           >
             + Add Company
           </Link>
@@ -135,151 +146,133 @@ export default async function Home() {
 
       {/* Stats row */}
       <div className="grid grid-cols-4 gap-4 mb-8">
-        <div className="bg-card-bg rounded-xl border border-border p-5">
-          <p className="text-muted text-xs font-medium uppercase tracking-wide">Total Persons</p>
-          <p className="text-3xl font-bold mt-1">{personCount.value}</p>
-        </div>
-        <div className="bg-card-bg rounded-xl border border-border p-5">
-          <p className="text-muted text-xs font-medium uppercase tracking-wide">Total Companies</p>
-          <p className="text-3xl font-bold mt-1">{companyCount.value}</p>
-        </div>
-        <div className="bg-card-bg rounded-xl border border-border p-5">
-          <p className="text-muted text-xs font-medium uppercase tracking-wide">Contacted (7d)</p>
-          <p className="text-3xl font-bold mt-1 text-success">{recentlyContactedCount.value}</p>
-        </div>
-        <div className="bg-card-bg rounded-xl border border-border p-5">
-          <p className="text-muted text-xs font-medium uppercase tracking-wide">Never Contacted</p>
-          <p className="text-3xl font-bold mt-1 text-danger">{neverContactedCount.value}</p>
-        </div>
+        {stats.map((s) => (
+          <div key={s.label} className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-muted text-xs font-semibold uppercase tracking-wider">{s.label}</p>
+              <span className={`w-8 h-8 rounded-lg ${s.color} flex items-center justify-center`}>
+                {s.icon}
+              </span>
+            </div>
+            <p className="text-3xl font-bold tracking-tight">{s.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Needs follow-up */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Needs Follow-up</h2>
-          <span className="text-xs text-muted">Not contacted in 7+ days or never</span>
-        </div>
-        {needsFollowUp.length === 0 ? (
-          <p className="text-muted text-sm">Everyone is up to date!</p>
-        ) : (
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="text-left text-muted text-xs uppercase tracking-wide">
-                <th className="pb-2 font-medium">Name</th>
-                <th className="pb-2 font-medium">Position</th>
-                <th className="pb-2 font-medium">Company</th>
-                <th className="pb-2 font-medium">Last Contacted</th>
-                <th className="pb-2 font-medium"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {needsFollowUp.map((p) => (
-                <tr key={p.id} className="border-t border-border">
-                  <td className="py-2.5">
-                    <Link href={`/persons/${p.id}/edit`} className="text-accent hover:underline font-medium">
-                      {p.name}
-                    </Link>
-                  </td>
-                  <td className="py-2.5 text-muted">{p.position || "-"}</td>
-                  <td className="py-2.5 text-muted">{p.companyName || "-"}</td>
-                  <td className="py-2.5">
-                    <span className={p.lastContactedAt ? "text-muted" : "text-danger font-medium"}>
-                      {timeAgo(p.lastContactedAt)}
-                    </span>
-                  </td>
-                  <td className="py-2.5 text-right">
-                    <Link
-                      href={`/persons/${p.id}/edit`}
-                      className="text-accent text-xs hover:underline"
-                    >
-                      View
-                    </Link>
-                  </td>
+      {/* Main content - 2 column layout */}
+      <div className="grid grid-cols-3 gap-6 mb-6">
+        {/* Follow-up - takes 2 cols */}
+        <div className="col-span-2 bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold tracking-tight">Needs Follow-up</h2>
+            <span className="text-[11px] text-muted bg-stone-100 px-2 py-0.5 rounded-full">7+ days or never</span>
+          </div>
+          {needsFollowUp.length === 0 ? (
+            <p className="text-muted text-sm py-4">Everyone is up to date!</p>
+          ) : (
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-muted text-[11px] uppercase tracking-wider">
+                  <th className="pb-2.5 font-semibold">Name</th>
+                  <th className="pb-2.5 font-semibold">Position</th>
+                  <th className="pb-2.5 font-semibold">Company</th>
+                  <th className="pb-2.5 font-semibold">Last Contacted</th>
+                  <th className="pb-2.5"></th>
                 </tr>
+              </thead>
+              <tbody>
+                {needsFollowUp.map((p) => (
+                  <tr key={p.id} className="border-t border-border/50 hover:bg-stone-50/50">
+                    <td className="py-2.5">
+                      <Link href={`/persons/${p.id}/edit`} className="text-accent hover:underline font-medium">
+                        {p.name}
+                      </Link>
+                    </td>
+                    <td className="py-2.5 text-muted">{p.position || "-"}</td>
+                    <td className="py-2.5 text-muted">{p.companyName || "-"}</td>
+                    <td className="py-2.5">
+                      <span className={p.lastContactedAt ? "text-muted" : "text-danger font-medium"}>
+                        {timeAgo(p.lastContactedAt)}
+                      </span>
+                    </td>
+                    <td className="py-2.5 text-right">
+                      <Link href={`/persons/${p.id}/edit`} className="text-accent text-xs hover:underline">
+                        View
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {/* Pending todos - 1 col */}
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold tracking-tight">Pending To-Dos</h2>
+            <Link href="/todos" className="text-accent text-xs font-medium hover:underline">View all</Link>
+          </div>
+          {pendingTodos.length === 0 ? (
+            <p className="text-muted text-sm py-4">No pending tasks.</p>
+          ) : (
+            <div className="space-y-0.5">
+              {pendingTodos.map((t) => (
+                <div key={t.id} className="flex items-start gap-2.5 py-2 border-t border-border/50 first:border-0">
+                  <span className="w-4 h-4 rounded-full border-2 border-stone-300 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1 min-w-0">
+                    <Link href={`/todos/${t.id}/edit`} className="text-sm font-medium text-foreground hover:text-accent transition-colors block truncate">
+                      {t.title}
+                    </Link>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {t.personName && (
+                        <span className="text-[11px] text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded font-medium">
+                          {t.personName}
+                        </span>
+                      )}
+                      {t.dueDate && (
+                        <span className={`text-[11px] ${t.dueDate < today ? "text-danger font-semibold" : "text-muted"}`}>
+                          {new Date(t.dueDate + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               ))}
-            </tbody>
-          </table>
-        )}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Upcoming events */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
+      {/* Events */}
+      <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm mb-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Upcoming Events</h2>
-          <Link href="/events" className="text-accent text-xs hover:underline">View all</Link>
+          <h2 className="font-semibold tracking-tight">Upcoming Events</h2>
+          <Link href="/events" className="text-accent text-xs font-medium hover:underline">View all</Link>
         </div>
         {upcomingEvents.length === 0 ? (
-          <p className="text-muted text-sm">No upcoming events.</p>
+          <p className="text-muted text-sm py-4">No upcoming events.</p>
         ) : (
-          <div className="space-y-2">
+          <div className="grid grid-cols-5 gap-3">
             {upcomingEvents.map((e) => (
-              <div key={e.id} className="flex items-center justify-between py-1.5 border-t border-border first:border-0">
-                <div className="flex items-center gap-3">
-                  <div className="text-center bg-gray-100 rounded-lg px-2.5 py-1 min-w-[3rem]">
-                    <p className="text-xs text-muted leading-tight">
-                      {new Date(e.date + "T00:00:00").toLocaleDateString("en-GB", { month: "short" })}
-                    </p>
-                    <p className="text-lg font-bold leading-tight">
-                      {new Date(e.date + "T00:00:00").getDate()}
-                    </p>
-                  </div>
-                  <div>
-                    <Link href={`/events/${e.id}/edit`} className="text-accent hover:underline text-sm font-medium">
-                      {e.name}
-                    </Link>
-                    <p className="text-muted text-xs">
-                      {e.location && <>{e.location}</>}
-                      {e.location && e.companyName && <> &middot; </>}
-                      {e.companyName && <>{e.companyName}</>}
-                    </p>
-                  </div>
-                </div>
-                <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                  e.status === "upcoming" ? "bg-blue-100 text-blue-700" :
-                  e.status === "attended" ? "bg-green-100 text-green-700" :
-                  "bg-gray-100 text-gray-500"
-                }`}>
-                  {e.status.charAt(0).toUpperCase() + e.status.slice(1)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Pending todos */}
-      <div className="bg-card-bg rounded-xl border border-border p-5 mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold">Pending To-Dos</h2>
-          <Link href="/todos" className="text-accent text-xs hover:underline">View all</Link>
-        </div>
-        {pendingTodos.length === 0 ? (
-          <p className="text-muted text-sm">No pending tasks.</p>
-        ) : (
-          <div className="space-y-1">
-            {pendingTodos.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-1.5 border-t border-border first:border-0">
-                <div className="flex items-center gap-2">
-                  <Link href={`/todos/${t.id}/edit`} className="text-accent hover:underline text-sm font-medium">
-                    {t.title}
-                  </Link>
-                  {t.personName && (
-                    <span className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded">
-                      {t.personName}
-                    </span>
-                  )}
-                </div>
-                {t.dueDate && (
-                  <span className={`text-xs ${
-                    t.dueDate < today ? "text-danger font-medium" : "text-muted"
-                  }`}>
-                    {new Date(t.dueDate + "T00:00:00").toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                    })}
+              <Link key={e.id} href={`/events/${e.id}/edit`} className="group border border-border/60 rounded-xl p-3.5 hover:border-accent/30 hover:shadow-sm transition-all">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded">
+                    {new Date(e.date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                   </span>
-                )}
-              </div>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${
+                    e.status === "upcoming" ? "bg-blue-50 text-blue-600" :
+                    e.status === "attended" ? "bg-emerald-50 text-emerald-600" :
+                    "bg-stone-100 text-stone-500"
+                  }`}>
+                    {e.status}
+                  </span>
+                </div>
+                <p className="text-sm font-medium group-hover:text-accent transition-colors truncate">{e.name}</p>
+                <p className="text-[11px] text-muted truncate mt-0.5">
+                  {[e.location, e.companyName].filter(Boolean).join(" - ") || "No details"}
+                </p>
+              </Link>
             ))}
           </div>
         )}
@@ -287,55 +280,60 @@ export default async function Home() {
 
       {/* Recent additions */}
       <div className="grid grid-cols-2 gap-6">
-        <div className="bg-card-bg rounded-xl border border-border p-5">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">Recently Added Persons</h2>
-            <Link href="/persons" className="text-accent text-xs hover:underline">View all</Link>
+            <h2 className="font-semibold tracking-tight">Recently Added Persons</h2>
+            <Link href="/persons" className="text-accent text-xs font-medium hover:underline">View all</Link>
           </div>
           {recentPersons.length === 0 ? (
             <p className="text-muted text-sm">No persons yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-0">
               {recentPersons.map((p) => (
-                <div key={p.id} className="flex items-center justify-between py-1.5 border-t border-border first:border-0">
-                  <div>
-                    <Link href={`/persons/${p.id}/edit`} className="text-accent hover:underline text-sm font-medium">
-                      {p.name}
-                    </Link>
-                    {p.position && (
-                      <span className="text-muted text-xs ml-2">{p.position}</span>
-                    )}
-                    {p.companyName && (
-                      <span className="text-muted text-xs ml-1">at {p.companyName}</span>
-                    )}
+                <div key={p.id} className="flex items-center justify-between py-2.5 border-t border-border/50 first:border-0">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-full bg-stone-100 flex items-center justify-center text-[11px] font-semibold text-stone-500">
+                      {p.name[0]}
+                    </span>
+                    <div>
+                      <Link href={`/persons/${p.id}/edit`} className="text-sm font-medium hover:text-accent transition-colors">
+                        {p.name}
+                      </Link>
+                      <p className="text-[11px] text-muted">
+                        {[p.position, p.companyName].filter(Boolean).join(" at ") || p.email || ""}
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-muted text-xs">{timeAgo(p.createdAt)}</span>
+                  <span className="text-muted text-[11px]">{timeAgo(p.createdAt)}</span>
                 </div>
               ))}
             </div>
           )}
         </div>
 
-        <div className="bg-card-bg rounded-xl border border-border p-5">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-5 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold">Recently Added Companies</h2>
-            <Link href="/companies" className="text-accent text-xs hover:underline">View all</Link>
+            <h2 className="font-semibold tracking-tight">Recently Added Companies</h2>
+            <Link href="/companies" className="text-accent text-xs font-medium hover:underline">View all</Link>
           </div>
           {recentCompanies.length === 0 ? (
             <p className="text-muted text-sm">No companies yet.</p>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-0">
               {recentCompanies.map((c) => (
-                <div key={c.id} className="flex items-center justify-between py-1.5 border-t border-border first:border-0">
-                  <div>
-                    <Link href={`/companies/${c.id}/edit`} className="text-accent hover:underline text-sm font-medium">
-                      {c.name}
-                    </Link>
-                    {c.industry && (
-                      <span className="text-muted text-xs ml-2">{c.industry}</span>
-                    )}
+                <div key={c.id} className="flex items-center justify-between py-2.5 border-t border-border/50 first:border-0">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-7 h-7 rounded-full bg-violet-50 flex items-center justify-center text-[11px] font-semibold text-violet-500">
+                      {c.name[0]}
+                    </span>
+                    <div>
+                      <Link href={`/companies/${c.id}/edit`} className="text-sm font-medium hover:text-accent transition-colors">
+                        {c.name}
+                      </Link>
+                      {c.industry && <p className="text-[11px] text-muted">{c.industry}</p>}
+                    </div>
                   </div>
-                  <span className="text-muted text-xs">{timeAgo(c.createdAt)}</span>
+                  <span className="text-muted text-[11px]">{timeAgo(c.createdAt)}</span>
                 </div>
               ))}
             </div>
