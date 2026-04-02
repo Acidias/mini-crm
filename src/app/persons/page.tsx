@@ -117,28 +117,28 @@ export default async function PersonsPage({
         </div>
       ) : (
         <BulkActions entityType="persons">
-          <div className="bg-card-bg rounded-xl border border-border overflow-hidden">
-            <table className="w-full text-sm">
+          <div className="bg-card-bg rounded-xl border border-border overflow-x-auto">
+            <table className="w-full text-sm min-w-[900px]">
               <thead>
                 <tr className="text-left text-muted text-xs uppercase tracking-wide bg-gray-50">
-                  <th className="px-5 py-3 w-8">
+                  <th className="px-3 py-3 w-8">
                     <input type="checkbox" data-select-all className="rounded" />
                   </th>
-                  <th className="px-5 py-3 font-medium">
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">
                     <SortHeader label="Name" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium">
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">
                     <SortHeader label="Position" field="position" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium">Company</th>
-                  <th className="px-5 py-3 font-medium">
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">Company</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">
                     <SortHeader label="Email" field="email" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium">LinkedIn</th>
-                  <th className="px-5 py-3 font-medium">
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">LinkedIn</th>
+                  <th className="px-3 py-3 font-medium whitespace-nowrap">
                     <SortHeader label="Last Contacted" field="lastContacted" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium text-right">Actions</th>
+                  <th className="px-3 py-3 font-medium text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -148,32 +148,32 @@ export default async function PersonsPage({
                     Date.now() - p.lastContactedAt.getTime() > 7 * 24 * 60 * 60 * 1000;
                   return (
                     <tr key={p.id} className="border-t border-border hover:bg-gray-50/50">
-                      <td className="px-5 py-3">
+                      <td className="px-3 py-2.5">
                         <input type="checkbox" name="ids" value={p.id} className="rounded" />
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-3 py-2.5 whitespace-nowrap">
                         <Link href={`/persons/${p.id}`} className="text-accent hover:underline font-medium">
                           {p.name}
                         </Link>
                       </td>
-                      <td className="px-5 py-3 text-muted">{p.position || "-"}</td>
-                      <td className="px-5 py-3 text-muted">{p.companyName || "-"}</td>
-                      <td className="px-5 py-3 text-muted">{p.email || "-"}</td>
-                      <td className="px-5 py-3">
+                      <td className="px-3 py-2.5 text-muted max-w-[140px] truncate">{p.position || "-"}</td>
+                      <td className="px-3 py-2.5 text-muted max-w-[140px] truncate">{p.companyName || "-"}</td>
+                      <td className="px-3 py-2.5 text-muted text-xs">{p.email || "-"}</td>
+                      <td className="px-3 py-2.5">
                         {p.linkedin ? (
                           <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="text-accent text-xs hover:underline">
-                            {p.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "").slice(0, 20)}
+                            {p.linkedin.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, "").replace(/\/$/, "").slice(0, 18)}
                           </a>
                         ) : (
                           <span className="text-muted">-</span>
                         )}
                       </td>
-                      <td className="px-5 py-3">
+                      <td className="px-3 py-2.5 whitespace-nowrap">
                         <span className={isStale ? "text-danger font-medium" : "text-success"}>
                           {timeAgo(p.lastContactedAt)}
                         </span>
                       </td>
-                      <td className="px-5 py-3 text-right">
+                      <td className="px-3 py-2.5 text-right whitespace-nowrap">
                         <div className="flex gap-3 justify-end items-center">
                           <form action={markAsContacted.bind(null, p.id)}>
                             <button type="submit" className="text-success text-xs hover:underline">Contacted</button>
