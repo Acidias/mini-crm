@@ -7,6 +7,7 @@ import { FROM_ADDRESS } from "@/lib/email";
 import { getSetting } from "@/actions/settings";
 import AiRewrite from "./ai-rewrite";
 import { Refreshable } from "@/components/refreshable";
+import SubmitButton from "@/components/submit-button";
 
 export default async function ComposeEmailPage({
   searchParams,
@@ -105,19 +106,19 @@ export default async function ComposeEmailPage({
           )}
         </div>
         <div className="flex gap-3 pt-2">
-          <button
-            type="submit"
+          <SubmitButton
             className="bg-accent text-white px-5 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors"
+            pendingText="Sending..."
           >
             Send Email
-          </button>
-          <button
-            type="submit"
+          </SubmitButton>
+          <SubmitButton
             formAction={saveDraft}
             className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
+            pendingText="Saving..."
           >
             Save as Draft
-          </button>
+          </SubmitButton>
           <Link
             href="/emails"
             className="border border-border px-5 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors"
