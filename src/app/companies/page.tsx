@@ -13,6 +13,18 @@ import SortPersistence from "@/components/sort-persistence";
 
 export const dynamic = "force-dynamic";
 
+const COMPANY_COLOURS = [
+  "#6366f1", "#0d9488", "#d946ef", "#f59e0b", "#ef4444",
+  "#8b5cf6", "#ec4899", "#10b981", "#f97316", "#06b6d4",
+  "#84cc16", "#a855f7", "#e11d48", "#059669", "#14b8a6",
+];
+
+function companyColour(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return COMPANY_COLOURS[Math.abs(hash) % COMPANY_COLOURS.length];
+}
+
 export default async function CompaniesPage({
   searchParams,
 }: {
@@ -110,70 +122,135 @@ export default async function CompaniesPage({
   ];
 
   return (
-    <div className="max-w-6xl">
+    <div>
       <SortPersistence pageKey="companies" />
-      <div className="flex items-center justify-between mb-6">
+
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Companies</h1>
-          <p className="text-muted text-sm mt-1">{total} total</p>
+          <h1 className="text-2xl font-bold tracking-tight">Companies</h1>
+          <p className="text-muted text-sm mt-0.5">{total} compan{total !== 1 ? "ies" : "y"}</p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <SearchInput placeholder="Search companies..." />
           <FieldFilter options={companyFilterOptions} />
-          <Link href="/companies/new" className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors">
+          <Link href="/companies/new" className="bg-accent text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm">
             + Add Company
           </Link>
         </div>
       </div>
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
-          <p className="text-muted mb-3">{query ? "No companies match your search." : "No companies yet."}</p>
-          {!query && <Link href="/companies/new" className="text-accent hover:underline text-sm">Add your first company</Link>}
+        <div className="bg-card-bg rounded-2xl border border-border/60 p-16 shadow-sm text-center">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-50 to-stone-100 flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500/70"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+          </div>
+          <p className="text-foreground font-medium mb-1">{query ? "No companies match your search." : "No companies yet."}</p>
+          <p className="text-muted text-sm mb-4">{query ? "Try adjusting your search terms or filters." : "Start tracking the organisations you work with."}</p>
+          {!query && (
+            <Link href="/companies/new" className="inline-flex items-center gap-1.5 bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+              Add your first company
+            </Link>
+          )}
         </div>
       ) : (
         <BulkActions entityType="companies">
-          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
+          <div className="bg-card-bg rounded-2xl border border-border/60 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-muted text-xs uppercase tracking-wide bg-stone-50">
-                  <th className="px-5 py-3 w-8"><input type="checkbox" data-select-all className="rounded" /></th>
-                  <th className="px-5 py-3 font-medium">
+                <tr className="text-left text-[11px] uppercase tracking-wider text-muted/70 border-b border-border/50 bg-stone-50/80">
+                  <th className="pl-4 pr-1 py-3 w-10">
+                    <input type="checkbox" data-select-all className="rounded" />
+                  </th>
+                  <th className="pl-1 pr-4 py-3 font-semibold">
                     <SortHeader label="Company" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium">
+                  <th className="px-4 py-3 font-semibold hidden md:table-cell w-24">
                     <SortHeader label="Priority" field="priority" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium hidden lg:table-cell">
+                  <th className="px-4 py-3 font-semibold hidden lg:table-cell">
                     <SortHeader label="Industry" field="industry" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium hidden lg:table-cell">Contact</th>
-                  <th className="px-5 py-3 font-medium">Persons</th>
-                  <th className="px-5 py-3 font-medium text-right">Actions</th>
+                  <th className="px-4 py-3 font-semibold hidden xl:table-cell">
+                    <SortHeader label="Email" field="email" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+                  </th>
+                  <th className="px-4 py-3 font-semibold hidden sm:table-cell w-24 text-center">Persons</th>
+                  <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody>
                 {allCompanies.map((c) => (
-                  <tr key={c.id} className="border-t border-border hover:bg-stone-50/50">
-                    <td className="px-5 py-3"><input type="checkbox" name="ids" value={c.id} className="rounded" /></td>
-                    <td className="px-5 py-3">
-                      <Link href={`/companies/${c.id}`} className="text-accent hover:underline font-medium">{c.name}</Link>
-                      {c.website && <p className="text-muted text-xs mt-0.5">{c.website}</p>}
+                  <tr key={c.id} className="border-t border-border/30 hover:bg-stone-50/70 group transition-colors">
+                    <td className="pl-4 pr-1 py-3">
+                      <input type="checkbox" name="ids" value={c.id} className="rounded" />
                     </td>
-                    <td className="px-5 py-3">
+                    {/* Company cell - avatar + name + subtitle info */}
+                    <td className="pl-1 pr-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 shadow-sm"
+                          style={{ backgroundColor: companyColour(c.name) }}
+                        >
+                          {c.name[0].toUpperCase()}
+                        </span>
+                        <div className="min-w-0">
+                          <Link href={`/companies/${c.id}`} className="group/name">
+                            <span className="font-semibold text-foreground group-hover/name:text-accent transition-colors truncate block">
+                              {c.name}
+                            </span>
+                          </Link>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {c.website && (
+                              <span className="text-xs text-muted truncate max-w-[180px]">{c.website.replace(/^https?:\/\//, "")}</span>
+                            )}
+                            {/* Show industry inline on mobile (hidden on lg where it has its own column) */}
+                            {c.industry && (
+                              <span className="text-xs text-stone-400 lg:hidden">
+                                {c.website && <span className="mr-1">-</span>}
+                                {c.industry}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 hidden md:table-cell">
                       <PriorityBadge priority={c.priority} />
                     </td>
-                    <td className="px-5 py-3 text-muted hidden lg:table-cell">{c.industry || "-"}</td>
-                    <td className="px-5 py-3 text-muted text-xs hidden lg:table-cell">
-                      {c.email && <p>{c.email}</p>}
-                      {c.phone && <p>{c.phone}</p>}
-                      {!c.email && !c.phone && "-"}
+                    <td className="px-4 py-3 hidden lg:table-cell">
+                      {c.industry ? (
+                        <span className="text-xs text-muted bg-stone-50 px-2 py-0.5 rounded-md">{c.industry}</span>
+                      ) : (
+                        <span className="text-stone-300">-</span>
+                      )}
                     </td>
-                    <td className="px-5 py-3 text-muted">{c.personCount}</td>
-                    <td className="px-5 py-3 text-right">
-                      <div className="flex gap-3 justify-end">
-                        <Link href={`/companies/${c.id}/edit`} className="text-accent text-xs hover:underline">Edit</Link>
-                        <ConfirmDelete action={deleteCompany.bind(null, c.id)} />
+                    <td className="px-4 py-3 hidden xl:table-cell">
+                      <span className="text-muted text-xs truncate block max-w-[200px]">
+                        {c.email || <span className="text-stone-300">-</span>}
+                      </span>
+                      {c.phone && <span className="text-muted text-xs block mt-0.5">{c.phone}</span>}
+                    </td>
+                    <td className="px-4 py-3 hidden sm:table-cell text-center">
+                      {c.personCount > 0 ? (
+                        <Link href={`/companies/${c.id}`} className="inline-flex items-center gap-1 text-xs text-muted hover:text-accent transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                          <span className="font-medium">{c.personCount}</span>
+                        </Link>
+                      ) : (
+                        <span className="text-stone-300 text-xs">0</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link href={`/companies/${c.id}/edit`} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors" title="Edit">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                        </Link>
+                        <ConfirmDelete
+                          action={deleteCompany.bind(null, c.id)}
+                          className="p-1.5 rounded-lg hover:bg-rose-50 text-stone-400 hover:text-rose-500 transition-colors"
+                          label={"\u00D7"}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -190,10 +267,10 @@ export default async function CompaniesPage({
 }
 
 function PriorityBadge({ priority }: { priority: number | null }) {
-  if (priority === null) return <span className="text-muted">-</span>;
+  if (priority === null) return <span className="text-stone-300">-</span>;
   if (priority >= 8) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
         High
       </span>
@@ -201,14 +278,14 @@ function PriorityBadge({ priority }: { priority: number | null }) {
   }
   if (priority >= 4) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        Medium
+        Med
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 bg-stone-100 px-2 py-0.5 rounded-md">
       <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
       Low
     </span>

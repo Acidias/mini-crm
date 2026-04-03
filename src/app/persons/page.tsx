@@ -29,6 +29,18 @@ function timeAgo(date: Date | null): string {
   return `${months}mo ago`;
 }
 
+const AVATAR_COLOURS = [
+  "#0d9488", "#6366f1", "#d946ef", "#f59e0b", "#10b981",
+  "#ef4444", "#8b5cf6", "#ec4899", "#14b8a6", "#f97316",
+  "#06b6d4", "#84cc16", "#a855f7", "#e11d48", "#059669",
+];
+
+function nameColour(name: string) {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  return AVATAR_COLOURS[Math.abs(hash) % AVATAR_COLOURS.length];
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const sortColumns: Record<string, any> = {
   name: persons.name,
@@ -61,7 +73,6 @@ export default async function PersonsPage({
       )
     : undefined;
 
-  // Field presence/absence filters
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fieldMap: Record<string, any> = {
     "has:email": and(isNotNull(persons.email), not(sql`${persons.email} = ''`)),
@@ -82,12 +93,10 @@ export default async function PersonsPage({
   };
   const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
 
-  // Group filter - if filtering by group, add a subquery condition
   const groupCondition = groupFilter
     ? sql`${persons.id} IN (SELECT person_id FROM person_groups WHERE group_id = ${groupFilter})`
     : undefined;
 
-  // Load group name for display
   let activeGroupName: string | null = null;
   if (groupFilter) {
     const [g] = await db.select({ name: groups.name }).from(groups).where(eq(groups.id, groupFilter));
@@ -153,13 +162,14 @@ export default async function PersonsPage({
   return (
     <div>
       <SortPersistence pageKey="persons" />
+
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Persons</h1>
           <p className="text-muted text-sm mt-0.5">{total} contact{total !== 1 ? "s" : ""}</p>
         </div>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
           <SearchInput placeholder="Search persons..." />
           <FieldFilter options={personFilterOptions} />
           <VerifyLinkedInButton />
@@ -167,7 +177,7 @@ export default async function PersonsPage({
             <ReviewCards
               personIds={allPersons.map((p) => p.id)}
               trigger={
-                <button className="border border-border px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-stone-50 hover:text-foreground transition-colors">
+                <button className="border border-border/60 bg-white px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-stone-50 hover:text-foreground hover:border-stone-300 transition-colors">
                   Review
                 </button>
               }
@@ -184,51 +194,51 @@ export default async function PersonsPage({
 
       {activeGroupName && (
         <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-teal-50 border border-teal-200/60 rounded-xl text-sm">
-          <span className="text-teal-700 font-medium">Filtered by group: {activeGroupName}</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-teal-600"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          <span className="text-teal-700 font-medium">Group: {activeGroupName}</span>
           <Link href="/persons" className="text-teal-600 hover:text-teal-800 ml-auto text-xs font-medium">
-            Clear filter
+            Clear
           </Link>
         </div>
       )}
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border/60 p-16 shadow-sm text-center">
-          <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <div className="bg-card-bg rounded-2xl border border-border/60 p-16 shadow-sm text-center">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-50 to-stone-100 flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-teal-600/70"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           </div>
-          <p className="text-muted mb-1 font-medium">{query ? "No persons match your search." : "No persons yet."}</p>
+          <p className="text-foreground font-medium mb-1">{query ? "No persons match your search." : "No persons yet."}</p>
+          <p className="text-muted text-sm mb-4">{query ? "Try adjusting your search terms or filters." : "Start building your contact network."}</p>
           {!query && (
-            <Link href="/persons/new" className="text-accent hover:underline text-sm">
+            <Link href="/persons/new" className="inline-flex items-center gap-1.5 bg-accent text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
               Add your first contact
             </Link>
           )}
         </div>
       ) : (
         <BulkActions entityType="persons">
-          <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
+          <div className="bg-card-bg rounded-2xl border border-border/60 shadow-sm overflow-hidden">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-left text-[11px] uppercase tracking-wider text-muted/80 border-b border-border/60">
-                  <th className="pl-4 pr-2 py-3 w-10">
+                <tr className="text-left text-[11px] uppercase tracking-wider text-muted/70 border-b border-border/50 bg-stone-50/80">
+                  <th className="pl-4 pr-1 py-3 w-10">
                     <input type="checkbox" data-select-all className="rounded" />
                   </th>
-                  <th className="px-4 py-3 font-semibold">
+                  <th className="pl-1 pr-4 py-3 font-semibold">
                     <SortHeader label="Name" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-4 py-3 font-semibold hidden md:table-cell">
+                  <th className="px-4 py-3 font-semibold hidden md:table-cell w-24">
                     <SortHeader label="Priority" field="priority" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
+                  <th className="px-4 py-3 font-semibold hidden lg:table-cell">Company</th>
                   <th className="px-4 py-3 font-semibold hidden xl:table-cell">
-                    <SortHeader label="Position" field="position" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
-                  </th>
-                  <th className="px-4 py-3 font-semibold">Company</th>
-                  <th className="px-4 py-3 font-semibold hidden lg:table-cell">
                     <SortHeader label="Email" field="email" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-4 py-3 font-semibold">
+                  <th className="px-4 py-3 font-semibold hidden sm:table-cell w-32">
                     <SortHeader label="Last Contact" field="lastContacted" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-4 py-3 w-24"></th>
+                  <th className="px-4 py-3 w-20"></th>
                 </tr>
               </thead>
               <tbody>
@@ -236,61 +246,83 @@ export default async function PersonsPage({
                   const isStale =
                     !p.lastContactedAt ||
                     Date.now() - p.lastContactedAt.getTime() > 7 * 24 * 60 * 60 * 1000;
+                  const initials = p.name.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase();
                   return (
-                    <tr key={p.id} className="border-t border-border/40 hover:bg-stone-50/60 group">
-                      <td className="pl-4 pr-2 py-3">
+                    <tr key={p.id} className="border-t border-border/30 hover:bg-stone-50/70 group transition-colors">
+                      <td className="pl-4 pr-1 py-3">
                         <input type="checkbox" name="ids" value={p.id} className="rounded" />
                       </td>
-                      <td className="px-4 py-3">
-                        <Link href={`/persons/${p.id}`} className="group/name">
-                          <span className="font-medium text-foreground group-hover/name:text-accent transition-colors">
-                            {p.name}
+                      {/* Name cell - stacks position + company on mobile */}
+                      <td className="pl-1 pr-4 py-3">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="w-8 h-8 rounded-full flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 shadow-sm"
+                            style={{ backgroundColor: nameColour(p.name) }}
+                          >
+                            {initials}
                           </span>
-                          {p.linkedin && (
-                            <svg className="inline-block ml-1.5 text-[#0A66C2] opacity-50" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-label="Has LinkedIn"><path d="M20.47 2H3.53A1.45 1.45 0 0 0 2 3.47v17.06A1.45 1.45 0 0 0 3.47 22h17.06A1.45 1.45 0 0 0 22 20.53V3.47A1.45 1.45 0 0 0 20.47 2ZM8.09 18.74h-3v-9h3v9ZM6.59 8.48a1.56 1.56 0 1 1 0-3.12 1.56 1.56 0 0 1 0 3.12Zm12.32 10.26h-3v-4.83c0-1.21-.43-2-1.52-2A1.65 1.65 0 0 0 12.85 13a2 2 0 0 0-.1.73v5h-3v-9h3v1.2a3 3 0 0 1 2.71-1.5c2 0 3.45 1.29 3.45 4.06v5.25Z"/></svg>
-                          )}
-                        </Link>
+                          <div className="min-w-0">
+                            <Link href={`/persons/${p.id}`} className="group/name flex items-center gap-1.5">
+                              <span className="font-semibold text-foreground group-hover/name:text-accent transition-colors truncate">
+                                {p.name}
+                              </span>
+                              {p.linkedin && (
+                                <svg className="flex-shrink-0 text-[#0A66C2] opacity-40" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-label="Has LinkedIn"><path d="M20.47 2H3.53A1.45 1.45 0 0 0 2 3.47v17.06A1.45 1.45 0 0 0 3.47 22h17.06A1.45 1.45 0 0 0 22 20.53V3.47A1.45 1.45 0 0 0 20.47 2ZM8.09 18.74h-3v-9h3v9ZM6.59 8.48a1.56 1.56 0 1 1 0-3.12 1.56 1.56 0 0 1 0 3.12Zm12.32 10.26h-3v-4.83c0-1.21-.43-2-1.52-2A1.65 1.65 0 0 0 12.85 13a2 2 0 0 0-.1.73v5h-3v-9h3v1.2a3 3 0 0 1 2.71-1.5c2 0 3.45 1.29 3.45 4.06v5.25Z"/></svg>
+                              )}
+                            </Link>
+                            {/* Subtitle: position on all screens, company on mobile only */}
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              {p.position && (
+                                <span className="text-xs text-muted truncate max-w-[180px]">{p.position}</span>
+                              )}
+                              {/* Show company inline on mobile (hidden on lg where it has its own column) */}
+                              {p.companyName && (
+                                <span className="text-xs text-stone-400 lg:hidden">
+                                  {p.position && <span className="mr-1">-</span>}
+                                  {p.companyName}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-4 py-3 hidden md:table-cell">
                         <PriorityBadge priority={p.priority} />
                       </td>
-                      <td className="px-4 py-3 text-muted hidden xl:table-cell">
-                        <span className="truncate block max-w-[160px]">{p.position || "-"}</span>
-                      </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 hidden lg:table-cell">
                         {p.companyId && p.companyName ? (
-                          <Link href={`/companies/${p.companyId}`} className="text-xs bg-stone-100 text-stone-600 px-2 py-0.5 rounded-md font-medium hover:bg-stone-200 hover:text-accent transition-colors">{p.companyName}</Link>
+                          <Link href={`/companies/${p.companyId}`} className="inline-flex items-center gap-1.5 text-xs bg-stone-100/80 text-stone-600 pl-1.5 pr-2.5 py-1 rounded-md font-medium hover:bg-stone-200 hover:text-accent transition-colors">
+                            <span className="w-4 h-4 rounded bg-stone-300/60 flex items-center justify-center text-[9px] font-bold text-stone-500">{p.companyName[0]}</span>
+                            {p.companyName}
+                          </Link>
                         ) : (
-                          <span className="text-muted">-</span>
+                          <span className="text-stone-300">-</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-muted text-xs hidden lg:table-cell">
-                        {p.email || "-"}
+                      <td className="px-4 py-3 hidden xl:table-cell">
+                        <span className="text-muted text-xs truncate block max-w-[200px]">{p.email || <span className="text-stone-300">-</span>}</span>
+                      </td>
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        <span className="inline-flex items-center gap-1.5 text-xs">
+                          <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${isStale ? "bg-amber-400" : "bg-emerald-400"}`} />
+                          <span className="text-muted">{timeAgo(p.lastContactedAt)}</span>
+                        </span>
                       </td>
                       <td className="px-4 py-3">
-                        {isStale ? (
-                          <span className="inline-flex items-center gap-1 text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
-                            <span className="text-muted">{timeAgo(p.lastContactedAt)}</span>
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 text-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                            <span className="text-muted">{timeAgo(p.lastContactedAt)}</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex gap-1 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex gap-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <form action={markAsContacted.bind(null, p.id)}>
-                            <button type="submit" className="p-1.5 rounded-md hover:bg-emerald-50 text-stone-400 hover:text-emerald-600 transition-colors" title="Mark contacted">
+                            <button type="submit" className="p-1.5 rounded-lg hover:bg-emerald-50 text-stone-400 hover:text-emerald-600 transition-colors" title="Mark contacted">
                               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                             </button>
                           </form>
-                          <Link href={`/persons/${p.id}/edit`} className="p-1.5 rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors" title="Edit">
+                          <Link href={`/persons/${p.id}/edit`} className="p-1.5 rounded-lg hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors" title="Edit">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
                           </Link>
-                          <ConfirmDelete action={deletePerson.bind(null, p.id)} />
+                          <ConfirmDelete
+                            action={deletePerson.bind(null, p.id)}
+                            className="p-1.5 rounded-lg hover:bg-rose-50 text-stone-400 hover:text-rose-500 transition-colors"
+                            label={"\u00D7"}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -308,10 +340,10 @@ export default async function PersonsPage({
 }
 
 function PriorityBadge({ priority }: { priority: number | null }) {
-  if (priority === null) return <span className="text-muted">-</span>;
+  if (priority === null) return <span className="text-stone-300">-</span>;
   if (priority >= 8) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
         High
       </span>
@@ -319,14 +351,14 @@ function PriorityBadge({ priority }: { priority: number | null }) {
   }
   if (priority >= 4) {
     return (
-      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+      <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-md">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-        Medium
+        Med
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
+    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-stone-400 bg-stone-100 px-2 py-0.5 rounded-md">
       <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
       Low
     </span>
