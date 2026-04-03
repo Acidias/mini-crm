@@ -29,9 +29,10 @@ You can manage these entities:
 - **Companies**: name, website, industry, email, phone, address, notes, tags
 - **Events**: name, date, location, description, company link, status (upcoming/attended/cancelled)
 - **To-dos**: title, due date, notes, linked to person and/or event, done/pending
-- **Emails**: send via Resend, save drafts, view sent/received emails
+- **Emails**: send via SMTP, save drafts, view sent/received emails
 - **Activities**: log calls, meetings, notes on persons or companies
 - **Tags**: coloured labels assigned to persons and companies
+- **Groups**: organise persons into named groups (e.g. "Networking Organisations"). Can add/remove persons, bulk add, and filter persons list by group
 
 You also have web research capabilities:
 - **web_fetch**: Fetch any public URL and read its content. Use for LinkedIn profiles, company websites, event pages, directories, Companies House, etc.

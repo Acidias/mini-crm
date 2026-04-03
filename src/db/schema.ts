@@ -150,6 +150,25 @@ export const apiKeys = pgTable("api_keys", {
   uniqueIndex("api_keys_hash_idx").on(table.keyHash),
 ]);
 
+export const groups = pgTable("groups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  colour: varchar("colour", { length: 7 }).notNull().default("#6b7280"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("groups_name_idx").on(table.name),
+]);
+
+export const personGroups = pgTable("person_groups", {
+  id: serial("id").primaryKey(),
+  groupId: integer("group_id").references(() => groups.id, { onDelete: "cascade" }).notNull(),
+  personId: integer("person_id").references(() => persons.id, { onDelete: "cascade" }).notNull(),
+}, (table) => [
+  index("person_groups_group_id_idx").on(table.groupId),
+  index("person_groups_person_id_idx").on(table.personId),
+]);
+
 export const chatSessions = pgTable("chat_sessions", {
   id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull().default("New Chat"),

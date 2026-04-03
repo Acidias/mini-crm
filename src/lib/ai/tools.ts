@@ -476,6 +476,101 @@ export const allTools: Tool[] = [
       required: ["entity_tag_id"],
     },
   },
+  // ─── GROUPS ───
+  {
+    name: "groups_list",
+    description: "List all groups with member counts.",
+    input_schema: {
+      type: "object" as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: "groups_get",
+    description: "Get a group by ID with its members.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        id: { type: "number", description: "Group ID" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "groups_create",
+    description: "Create a new group for organising persons.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        name: { type: "string", description: "Group name (required)" },
+        description: { type: "string", description: "Optional description" },
+        colour: { type: "string", description: "Hex colour e.g. #0d9488" },
+      },
+      required: ["name"],
+    },
+  },
+  {
+    name: "groups_update",
+    description: "Update a group's name, description, or colour.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        id: { type: "number", description: "Group ID (required)" },
+        name: { type: "string", description: "New name" },
+        description: { type: "string", description: "New description" },
+        colour: { type: "string", description: "New hex colour" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "groups_delete",
+    description: "Delete a group. Members are not deleted, just unlinked.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        id: { type: "number", description: "Group ID" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "groups_add_person",
+    description: "Add a person to a group.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        group_id: { type: "number", description: "Group ID" },
+        person_id: { type: "number", description: "Person ID" },
+      },
+      required: ["group_id", "person_id"],
+    },
+  },
+  {
+    name: "groups_remove_person",
+    description: "Remove a person from a group.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        group_id: { type: "number", description: "Group ID" },
+        person_id: { type: "number", description: "Person ID" },
+      },
+      required: ["group_id", "person_id"],
+    },
+  },
+  {
+    name: "groups_bulk_add_persons",
+    description: "Add multiple persons to a group at once.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        group_id: { type: "number", description: "Group ID" },
+        person_ids: { type: "array", items: { type: "number" }, description: "Array of person IDs to add" },
+      },
+      required: ["group_id", "person_ids"],
+    },
+  },
   // ─── LINKEDIN VERIFICATION ───
   {
     name: "linkedin_verify",
@@ -500,7 +595,7 @@ export const allTools: Tool[] = [
   // ─── NAVIGATION ───
   {
     name: "navigate",
-    description: "Navigate the user to a page in the Mini CRM. Use this when the user asks to see, open, go to, or view a page. Available pages: dashboard (/), ai chat (/ai), emails (/emails), draft emails (/emails?tab=drafts), compose email (/emails/compose), email detail (/emails/{id}), persons (/persons), new person (/persons/new), person detail (/persons/{id}), edit person (/persons/{id}/edit), companies (/companies), new company (/companies/new), company detail (/companies/{id}), edit company (/companies/{id}/edit), events (/events), new event (/events/new), todos (/todos), new todo (/todos/new), calendar (/calendar), trash (/trash), profile (/profile). Supports query parameters for filtered views.",
+    description: "Navigate the user to a page in the Mini CRM. Use this when the user asks to see, open, go to, or view a page. Available pages: dashboard (/), ai chat (/ai), emails (/emails), draft emails (/emails?tab=drafts), compose email (/emails/compose), email detail (/emails/{id}), persons (/persons), persons filtered by group (/persons?group={id}), new person (/persons/new), person detail (/persons/{id}), edit person (/persons/{id}/edit), companies (/companies), new company (/companies/new), company detail (/companies/{id}), edit company (/companies/{id}/edit), groups (/groups), group detail (/groups/{id}), events (/events), new event (/events/new), todos (/todos), new todo (/todos/new), calendar (/calendar), trash (/trash), profile (/profile). Supports query parameters for filtered views.",
     input_schema: {
       type: "object" as const,
       properties: {

@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import {
-  persons, companies, events, emails, todos, activities, tags, entityTags,
+  persons, companies, events, emails, todos, activities, tags, entityTags, groups, personGroups,
 } from "@/db/schema";
 import { eq, ilike, or, and, isNull, desc, asc, gte, lt, count, sql } from "drizzle-orm";
 import { sendSmtpEmail, FROM_ADDRESS } from "@/lib/email";
@@ -644,6 +644,85 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     const [deleted] = await db.delete(entityTags).where(eq(entityTags.id, id)).returning();
     if (!deleted) return { success: false, error: `Entity-tag with ID ${id} not found` };
     return { success: true, data: { id, removed: true } };
+  },
+
+  // ─── GROUPS ───
+  async groups_list() {
+    const result = await db
+      .select({
+        id: groups.id, name: groups.name, description: groups.description,
+        colour: groups.colour, memberCount: count(personGroups.id),
+      })
+      .from(groups)
+      .leftJoin(personGroups, eq(groups.id, personGroups.groupId))
+      .groupBy(groups.id)
+      .orderBy(groups.name);
+    return { success: true, data: result };
+  },
+
+  async groups_get(input) {
+    const id = input.id as number;
+    const [group] = await db.select().from(groups).where(eq(groups.id, id));
+    if (!group) return { success: false, error: `Group ${id} not found` };
+    const members = await db
+      .select({ personId: persons.id, name: persons.name, email: persons.email, position: persons.position })
+      .from(personGroups)
+      .innerJoin(persons, eq(personGroups.personId, persons.id))
+      .where(eq(personGroups.groupId, id));
+    return { success: true, data: { ...group, members } };
+  },
+
+  async groups_create(input) {
+    const name = (input.name as string)?.trim();
+    if (!name) return { success: false, error: "Name is required" };
+    const [created] = await db.insert(groups).values({
+      name,
+      description: (input.description as string)?.trim() || null,
+      colour: (input.colour as string) || "#6b7280",
+    }).returning();
+    return { success: true, data: created };
+  },
+
+  async groups_update(input) {
+    const id = input.id as number;
+    const updates: Record<string, unknown> = {};
+    if (input.name !== undefined) updates.name = (input.name as string).trim();
+    if (input.description !== undefined) updates.description = (input.description as string)?.trim() || null;
+    if (input.colour !== undefined) updates.colour = input.colour as string;
+    const [updated] = await db.update(groups).set(updates).where(eq(groups.id, id)).returning();
+    if (!updated) return { success: false, error: `Group ${id} not found` };
+    return { success: true, data: updated };
+  },
+
+  async groups_delete(input) {
+    const id = input.id as number;
+    const [deleted] = await db.delete(groups).where(eq(groups.id, id)).returning();
+    if (!deleted) return { success: false, error: `Group ${id} not found` };
+    return { success: true, data: { id, deleted: true } };
+  },
+
+  async groups_add_person(input) {
+    const groupId = input.group_id as number;
+    const personId = input.person_id as number;
+    await db.insert(personGroups).values({ groupId, personId }).onConflictDoNothing();
+    return { success: true, data: { groupId, personId, added: true } };
+  },
+
+  async groups_remove_person(input) {
+    const groupId = input.group_id as number;
+    const personId = input.person_id as number;
+    await db.delete(personGroups).where(and(eq(personGroups.groupId, groupId), eq(personGroups.personId, personId)));
+    return { success: true, data: { groupId, personId, removed: true } };
+  },
+
+  async groups_bulk_add_persons(input) {
+    const groupId = input.group_id as number;
+    const personIds = input.person_ids as number[];
+    if (!personIds?.length) return { success: false, error: "person_ids array is required" };
+    for (const personId of personIds) {
+      await db.insert(personGroups).values({ groupId, personId }).onConflictDoNothing();
+    }
+    return { success: true, data: { groupId, added: personIds.length } };
   },
 
   async linkedin_verify(input) {

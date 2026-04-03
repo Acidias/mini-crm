@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { db } from "@/db";
-import { persons, companies } from "@/db/schema";
+import { persons, companies, personGroups, groups } from "@/db/schema";
 import { desc, eq, asc, ilike, or, sql, count, isNull, isNotNull, and, not } from "drizzle-orm";
 import { deletePerson, markAsContacted } from "@/actions/persons";
 import SearchInput from "@/components/search-input";
@@ -38,7 +38,7 @@ const sortColumns: Record<string, any> = {
 export default async function PersonsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; sort?: string; order?: string; page?: string; filter?: string | string[] }>;
+  searchParams: Promise<{ q?: string; sort?: string; order?: string; page?: string; filter?: string | string[]; group?: string }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
@@ -46,6 +46,7 @@ export default async function PersonsPage({
   const sortOrder = params.order || "asc";
   const page = Math.max(1, parseInt(params.page || "1"));
   const filters = Array.isArray(params.filter) ? params.filter : params.filter ? [params.filter] : [];
+  const groupFilter = params.group ? parseInt(params.group) : null;
 
   const searchFilter = query
     ? or(
@@ -72,7 +73,19 @@ export default async function PersonsPage({
   };
   const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
 
-  const conditions = [isNull(persons.deletedAt), searchFilter, ...fieldFilters].filter(Boolean);
+  // Group filter - if filtering by group, add a subquery condition
+  const groupCondition = groupFilter
+    ? sql`${persons.id} IN (SELECT person_id FROM person_groups WHERE group_id = ${groupFilter})`
+    : undefined;
+
+  // Load group name for display
+  let activeGroupName: string | null = null;
+  if (groupFilter) {
+    const [g] = await db.select({ name: groups.name }).from(groups).where(eq(groups.id, groupFilter));
+    activeGroupName = g?.name || null;
+  }
+
+  const conditions = [isNull(persons.deletedAt), searchFilter, groupCondition, ...fieldFilters].filter(Boolean);
   const whereClause = and(...conditions);
 
   const [totalResult] = await db
@@ -107,6 +120,7 @@ export default async function PersonsPage({
   if (query) sp.q = query;
   if (sortField !== "name") sp.sort = sortField;
   if (sortOrder !== "asc") sp.order = sortOrder;
+  if (groupFilter) sp.group = groupFilter.toString();
 
   const personFilterOptions = [
     { label: "Has email", value: "has:email" },
@@ -141,6 +155,15 @@ export default async function PersonsPage({
           </Link>
         </div>
       </div>
+
+      {activeGroupName && (
+        <div className="flex items-center gap-2 mb-4 px-4 py-2.5 bg-teal-50 border border-teal-200/60 rounded-xl text-sm">
+          <span className="text-teal-700 font-medium">Filtered by group: {activeGroupName}</span>
+          <Link href="/persons" className="text-teal-600 hover:text-teal-800 ml-auto text-xs font-medium">
+            Clear filter
+          </Link>
+        </div>
+      )}
 
       {total === 0 ? (
         <div className="bg-card-bg rounded-xl border border-border/60 p-16 shadow-sm text-center">
