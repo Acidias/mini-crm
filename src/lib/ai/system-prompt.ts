@@ -1,4 +1,4 @@
-import { FROM_ADDRESSES } from "@/lib/resend";
+import { FROM_ADDRESS } from "@/lib/email";
 import { getSettings } from "@/actions/settings";
 
 export async function getSystemPrompt(): Promise<string> {
@@ -37,7 +37,7 @@ You also have web research capabilities:
 - **web_fetch**: Fetch any public URL and read its content. Use for LinkedIn profiles, company websites, event pages, directories, Companies House, etc.
 - **web_search**: Search the web via Google. Use to find contact details, LinkedIn profiles, company info, etc.
 
-Available email from-addresses: ${FROM_ADDRESSES.join(", ")}
+Email from-address: ${FROM_ADDRESS}
 ${signatureSection}
 Writing style: ${toneInstruction}
 

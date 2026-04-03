@@ -3,7 +3,7 @@ import {
   persons, companies, events, emails, todos, activities, tags, entityTags,
 } from "@/db/schema";
 import { eq, ilike, or, and, isNull, desc, asc, gte, lt, count, sql } from "drizzle-orm";
-import { getResend, FROM_ADDRESSES, DEFAULT_FROM } from "@/lib/resend";
+import { sendSmtpEmail, FROM_ADDRESS } from "@/lib/email";
 import { getSetting } from "@/actions/settings";
 import * as cheerio from "cheerio";
 import { checkLinkedIn } from "@/lib/linkedin";
@@ -508,28 +508,20 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     const rawBody = (input.body as string)?.trim();
     if (!to || !subject || !rawBody) return { success: false, error: "to, subject, and body are all required" };
 
-    const fromRaw = (input.from as string) || "";
-    const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
+    const from = (input.from as string)?.trim() || FROM_ADDRESS;
 
     // Append signature
     const signature = await getSetting("email_signature");
     const body = signature ? `${rawBody}\n\n${signature}` : rawBody;
 
-    const { data, error } = await getResend().emails.send({
-      from,
-      to: [to],
-      subject,
-      text: body,
-    });
-
-    if (error) return { success: false, error: error.message };
+    const { messageId } = await sendSmtpEmail({ from, to, subject, text: body });
 
     // Auto-link to person
     const [matchedPerson] = await db.select({ id: persons.id }).from(persons).where(ilike(persons.email, to)).limit(1);
     const personId = matchedPerson?.id || null;
 
     const [created] = await db.insert(emails).values({
-      resendId: data?.id || null,
+      resendId: messageId,
       direction: "outbound",
       fromAddress: from,
       toAddress: to,
@@ -548,7 +540,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
   },
 
   async emails_save_draft(input) {
-    const from = FROM_ADDRESSES.includes(input.from as string) ? (input.from as string) : DEFAULT_FROM;
+    const from = (input.from as string)?.trim() || FROM_ADDRESS;
     const to = (input.to as string)?.trim() || "";
 
     const [matchedPerson] = to
@@ -578,7 +570,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     if (input.to !== undefined) updates.toAddress = (input.to as string).trim();
     if (input.subject !== undefined) updates.subject = (input.subject as string).trim();
     if (input.body !== undefined) updates.bodyText = (input.body as string).trim();
-    if (input.from !== undefined && FROM_ADDRESSES.includes(input.from as string)) {
+    if (input.from !== undefined) {
       updates.fromAddress = input.from as string;
     }
 

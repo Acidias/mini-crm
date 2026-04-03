@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { persons, emails } from "@/db/schema";
 import { eq, isNull } from "drizzle-orm";
 import { sendEmail, saveDraft } from "@/actions/emails";
-import { FROM_ADDRESSES } from "@/lib/resend";
+import { FROM_ADDRESS } from "@/lib/email";
 import { getSetting } from "@/actions/settings";
 import AiRewrite from "./ai-rewrite";
 import { Refreshable } from "@/components/refreshable";
@@ -43,7 +43,7 @@ export default async function ComposeEmailPage({
   }
 
   const signature = await getSetting("email_signature");
-  const prefillFrom = draft?.fromAddress || FROM_ADDRESSES[0];
+  const prefillFrom = draft?.fromAddress || FROM_ADDRESS;
   const prefillSubject = draft?.subject || "";
   const prefillBody = draft?.bodyText || "";
 
@@ -61,22 +61,10 @@ export default async function ComposeEmailPage({
       <Refreshable>
       <form id="compose-form" action={sendEmail} className="bg-card-bg rounded-xl border border-border/60 p-6 shadow-sm space-y-5">
         {draft && <input type="hidden" name="draftId" value={draft.id} />}
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1.5">From</label>
-            <select
-              name="from"
-              defaultValue={prefillFrom}
-              className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
-            >
-              {FROM_ADDRESSES.map((addr) => (
-                <option key={addr} value={addr}>
-                  {addr}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div></div>
+        <div>
+          <label className="block text-sm font-medium mb-1.5">From</label>
+          <input type="hidden" name="from" value={prefillFrom} />
+          <p className="border border-border rounded-lg w-full px-3 py-2 text-sm bg-stone-50 text-muted">{prefillFrom}</p>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1.5">To *</label>

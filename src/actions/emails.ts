@@ -5,7 +5,7 @@ import { emails, persons } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getResend, DEFAULT_FROM, FROM_ADDRESSES } from "@/lib/resend";
+import { sendSmtpEmail, FROM_ADDRESS } from "@/lib/email";
 import { getSetting } from "@/actions/settings";
 
 async function findPersonByEmail(email: string) {
@@ -21,24 +21,19 @@ export async function sendEmail(formData: FormData) {
   const to = formData.get("to") as string;
   const subject = formData.get("subject") as string;
   const rawBody = formData.get("body") as string;
-  const fromRaw = formData.get("from") as string;
-  const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
+  const from = (formData.get("from") as string) || FROM_ADDRESS;
   const draftId = formData.get("draftId") as string;
 
   // Append signature
   const signature = await getSetting("email_signature");
   const body = signature ? `${rawBody}\n\n${signature}` : rawBody;
 
-  const { data, error } = await getResend().emails.send({
+  const { messageId } = await sendSmtpEmail({
     from,
-    to: [to],
-    subject: subject,
+    to,
+    subject,
     text: body,
   });
-
-  if (error) {
-    throw new Error(error.message);
-  }
 
   const personId = await findPersonByEmail(to);
 
@@ -47,7 +42,7 @@ export async function sendEmail(formData: FormData) {
     await db
       .update(emails)
       .set({
-        resendId: data?.id || null,
+        resendId: messageId,
         direction: "outbound",
         fromAddress: from,
         toAddress: to,
@@ -61,7 +56,7 @@ export async function sendEmail(formData: FormData) {
       .where(eq(emails.id, parseInt(draftId)));
   } else {
     await db.insert(emails).values({
-      resendId: data?.id || null,
+      resendId: messageId,
       direction: "outbound",
       fromAddress: from,
       toAddress: to,
@@ -89,8 +84,7 @@ export async function saveDraft(formData: FormData) {
   const to = (formData.get("to") as string) || "";
   const subject = (formData.get("subject") as string) || "";
   const body = (formData.get("body") as string) || "";
-  const fromRaw = formData.get("from") as string;
-  const from = FROM_ADDRESSES.includes(fromRaw) ? fromRaw : DEFAULT_FROM;
+  const from = (formData.get("from") as string) || FROM_ADDRESS;
   const draftId = formData.get("draftId") as string;
 
   const personId = to ? await findPersonByEmail(to) : null;
