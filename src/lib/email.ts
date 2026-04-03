@@ -1,27 +1,15 @@
-import nodemailer from "nodemailer";
+// Email from address - no heavy imports needed for this
+export const FROM_ADDRESS = "mihaly.dani@foundry70.co.uk";
 
-// SMTP transport for sending emails via Zoho
-let _transport: nodemailer.Transporter | null = null;
-
-export function getTransport() {
-  if (!_transport) {
-    _transport = nodemailer.createTransport({
-      host: process.env.SMTP_HOST || "smtppro.zoho.eu",
-      port: parseInt(process.env.SMTP_PORT || "465"),
-      secure: true,
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-  }
-  return _transport;
+export function getFromAddress() {
+  return process.env.SMTP_USER || FROM_ADDRESS;
 }
 
-// The from address is now the authenticated SMTP user
-export const FROM_ADDRESS = process.env.SMTP_USER || "mihaly@foundry70.co.uk";
-export const FROM_NAME = process.env.SMTP_FROM_NAME || "Mihaly Dani";
+export function getFromName() {
+  return process.env.SMTP_FROM_NAME || "Mihaly Dani";
+}
 
+// SMTP sending - lazy-loads nodemailer only when actually sending
 export async function sendSmtpEmail({
   from,
   to,
@@ -35,9 +23,21 @@ export async function sendSmtpEmail({
   text: string;
   html?: string;
 }): Promise<{ messageId: string }> {
-  const transport = getTransport();
+  const nodemailer = await import("nodemailer");
+  const transport = nodemailer.default.createTransport({
+    host: process.env.SMTP_HOST || "smtppro.zoho.eu",
+    port: parseInt(process.env.SMTP_PORT || "465"),
+    secure: true,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+
+  const fromName = getFromName();
+  const fromAddr = from || getFromAddress();
   const result = await transport.sendMail({
-    from: from ? `${FROM_NAME} <${from}>` : `${FROM_NAME} <${FROM_ADDRESS}>`,
+    from: `${fromName} <${fromAddr}>`,
     to,
     subject,
     text,
