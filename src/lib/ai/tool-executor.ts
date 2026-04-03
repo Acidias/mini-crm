@@ -173,6 +173,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
       linkedin: (input.linkedin as string)?.trim() || null,
       notes: (input.notes as string)?.trim() || null,
       companyId: (input.company_id as number) || null,
+      priority: input.priority !== undefined ? Math.min(10, Math.max(1, input.priority as number)) : 5,
     }).returning();
     return { success: true, data: created };
   },
@@ -187,6 +188,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     if (input.linkedin !== undefined) updates.linkedin = (input.linkedin as string)?.trim() || null;
     if (input.notes !== undefined) updates.notes = (input.notes as string)?.trim() || null;
     if (input.company_id !== undefined) updates.companyId = (input.company_id as number) || null;
+    if (input.priority !== undefined) updates.priority = Math.min(10, Math.max(1, input.priority as number));
 
     const [updated] = await db.update(persons).set(updates).where(eq(persons.id, id)).returning();
     if (!updated) return { success: false, error: `Person with ID ${id} not found` };
@@ -273,6 +275,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
       phone: (input.phone as string)?.trim() || null,
       address: (input.address as string)?.trim() || null,
       notes: (input.notes as string)?.trim() || null,
+      priority: input.priority !== undefined ? Math.min(10, Math.max(1, input.priority as number)) : 5,
     }).returning();
     return { success: true, data: created };
   },
@@ -287,6 +290,7 @@ const executors: Record<string, (input: Input) => Promise<ToolResult>> = {
     if (input.phone !== undefined) updates.phone = (input.phone as string)?.trim() || null;
     if (input.address !== undefined) updates.address = (input.address as string)?.trim() || null;
     if (input.notes !== undefined) updates.notes = (input.notes as string)?.trim() || null;
+    if (input.priority !== undefined) updates.priority = Math.min(10, Math.max(1, input.priority as number));
 
     const [updated] = await db.update(companies).set(updates).where(eq(companies.id, id)).returning();
     if (!updated) return { success: false, error: `Company with ID ${id} not found` };

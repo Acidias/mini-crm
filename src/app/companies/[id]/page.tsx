@@ -45,6 +45,15 @@ export default async function CompanyDetailPage({
       ).orderBy(desc(emails.createdAt)).limit(10)
     : [];
 
+  const priorityLabel = (p: number | null) => {
+    const v = p || 5;
+    if (v <= 3) return { text: `${v} - Low`, cls: "bg-stone-100 text-stone-600" };
+    if (v <= 6) return { text: `${v} - Medium`, cls: "bg-blue-100 text-blue-700" };
+    if (v <= 8) return { text: `${v} - High`, cls: "bg-amber-100 text-amber-700" };
+    return { text: `${v} - Critical`, cls: "bg-red-100 text-red-700" };
+  };
+  const priority = priorityLabel(company.priority);
+
   return (
     <div className="max-w-4xl">
       <div className="mb-6">
@@ -86,6 +95,10 @@ export default async function CompanyDetailPage({
         <div>
           <p className="text-muted text-xs uppercase tracking-wide font-medium mb-1">Address</p>
           <p>{company.address || "-"}</p>
+        </div>
+        <div>
+          <p className="text-muted text-xs uppercase tracking-wide font-medium mb-1">Priority</p>
+          <span className={`inline-block text-xs px-2 py-0.5 rounded-full font-medium ${priority.cls}`}>{priority.text}</span>
         </div>
         {company.notes && (
           <div className="col-span-2">

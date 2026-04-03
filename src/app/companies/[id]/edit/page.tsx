@@ -113,6 +113,12 @@ export default async function EditCompanyPage({
               className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium mb-1.5">Priority</label>
+            <select name="priority" defaultValue={company.priority?.toString() || "5"} className="border border-border rounded-lg w-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent">
+              {[1,2,3,4,5,6,7,8,9,10].map(n => <option key={n} value={n}>{n}{n === 1 ? " (Low)" : n === 5 ? " (Medium)" : n === 10 ? " (High)" : ""}</option>)}
+            </select>
+          </div>
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-1.5">Address</label>
             <input

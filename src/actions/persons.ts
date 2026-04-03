@@ -11,6 +11,7 @@ export async function createPerson(formData: FormData) {
   const companyId = formData.get("companyId") as string;
   const name = validateRequired(formData.get("name") as string, "Name");
   const email = validateEmail(formData.get("email") as string);
+  const priority = Math.min(10, Math.max(1, parseInt(formData.get("priority") as string) || 5));
 
   await db.insert(persons).values({
     name,
@@ -20,6 +21,7 @@ export async function createPerson(formData: FormData) {
     linkedin: cleanString(formData.get("linkedin") as string),
     notes: cleanString(formData.get("notes") as string),
     companyId: companyId ? parseInt(companyId) : null,
+    priority,
   });
   redirect("/persons");
 }
@@ -28,6 +30,7 @@ export async function updatePerson(id: number, formData: FormData) {
   const companyId = formData.get("companyId") as string;
   const name = validateRequired(formData.get("name") as string, "Name");
   const email = validateEmail(formData.get("email") as string);
+  const priority = Math.min(10, Math.max(1, parseInt(formData.get("priority") as string) || 5));
 
   await db
     .update(persons)
@@ -39,6 +42,7 @@ export async function updatePerson(id: number, formData: FormData) {
       linkedin: cleanString(formData.get("linkedin") as string),
       notes: cleanString(formData.get("notes") as string),
       companyId: companyId ? parseInt(companyId) : null,
+      priority,
       updatedAt: new Date(),
     })
     .where(eq(persons.id, id));
