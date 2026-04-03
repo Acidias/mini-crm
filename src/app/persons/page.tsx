@@ -11,6 +11,7 @@ import ConfirmDelete from "@/components/confirm-delete";
 import VerifyLinkedInButton from "@/components/verify-linkedin-button";
 import FieldFilter from "@/components/field-filter";
 import ReviewCards from "@/components/review-cards";
+import SortPersistence from "@/components/sort-persistence";
 
 export const dynamic = "force-dynamic";
 
@@ -151,6 +152,7 @@ export default async function PersonsPage({
 
   return (
     <div>
+      <SortPersistence pageKey="persons" />
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>

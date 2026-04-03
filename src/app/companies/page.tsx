@@ -9,6 +9,7 @@ import SortHeader from "@/components/sort-header";
 import BulkActions from "@/components/bulk-actions";
 import ConfirmDelete from "@/components/confirm-delete";
 import FieldFilter from "@/components/field-filter";
+import SortPersistence from "@/components/sort-persistence";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,7 @@ export default async function CompaniesPage({
 
   return (
     <div className="max-w-6xl">
+      <SortPersistence pageKey="companies" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold">Companies</h1>

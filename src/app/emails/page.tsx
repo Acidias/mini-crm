@@ -8,6 +8,7 @@ import Pagination, { PAGE_SIZE } from "@/components/pagination";
 import SortHeader from "@/components/sort-header";
 import ConfirmDelete from "@/components/confirm-delete";
 import FieldFilter from "@/components/field-filter";
+import SortPersistence from "@/components/sort-persistence";
 
 export const dynamic = "force-dynamic";
 
@@ -124,6 +125,7 @@ export default async function EmailsPage({
 
   return (
     <div className="max-w-5xl">
+      <SortPersistence pageKey="emails" />
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Emails</h1>
