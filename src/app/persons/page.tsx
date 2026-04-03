@@ -10,6 +10,7 @@ import BulkActions from "@/components/bulk-actions";
 import ConfirmDelete from "@/components/confirm-delete";
 import VerifyLinkedInButton from "@/components/verify-linkedin-button";
 import FieldFilter from "@/components/field-filter";
+import ReviewCards from "@/components/review-cards";
 
 export const dynamic = "force-dynamic";
 
@@ -147,6 +148,16 @@ export default async function PersonsPage({
           <SearchInput placeholder="Search persons..." />
           <FieldFilter options={personFilterOptions} />
           <VerifyLinkedInButton />
+          {allPersons.length > 0 && (
+            <ReviewCards
+              personIds={allPersons.map((p) => p.id)}
+              trigger={
+                <button className="border border-border px-3 py-2.5 rounded-lg text-sm font-medium text-muted hover:bg-stone-50 hover:text-foreground transition-colors">
+                  Review
+                </button>
+              }
+            />
+          )}
           <Link
             href="/persons/new"
             className="bg-accent text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm"

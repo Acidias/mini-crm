@@ -9,6 +9,7 @@ export const companies = pgTable("companies", {
   phone: varchar("phone", { length: 100 }),
   address: varchar("address", { length: 500 }),
   notes: text("notes"),
+  priority: integer("priority").default(5),
   deletedAt: timestamp("deleted_at"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -22,6 +23,7 @@ export const persons = pgTable("persons", {
   position: varchar("position", { length: 255 }),
   linkedin: varchar("linkedin", { length: 500 }),
   notes: text("notes"),
+  priority: integer("priority").default(5),
   companyId: integer("company_id").references(() => companies.id, {
     onDelete: "set null",
   }),

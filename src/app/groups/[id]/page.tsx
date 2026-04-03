@@ -5,6 +5,7 @@ import { eq, isNull, and } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { updateGroup, deleteGroup, addPersonToGroup, removePersonFromGroup } from "@/actions/groups";
 import ConfirmDelete from "@/components/confirm-delete";
+import ReviewCards from "@/components/review-cards";
 
 export const dynamic = "force-dynamic";
 
@@ -60,6 +61,16 @@ export default async function GroupDetailPage({
           </div>
         </div>
         <div className="flex gap-2">
+          {members.length > 0 && (
+            <ReviewCards
+              personIds={members.map((m) => m.personId)}
+              trigger={
+                <button className="bg-accent text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors">
+                  Review Members
+                </button>
+              }
+            />
+          )}
           <Link href={`/persons?group=${groupId}`} className="border border-border px-3 py-2 rounded-lg text-sm text-muted hover:bg-stone-50 transition-colors">
             View in Persons
           </Link>
