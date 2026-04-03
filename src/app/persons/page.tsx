@@ -73,9 +73,9 @@ export default async function PersonsPage({
     "missing:company": isNull(persons.companyId),
     "has:position": and(isNotNull(persons.position), not(sql`${persons.position} = ''`)),
     "missing:position": or(isNull(persons.position), sql`${persons.position} = ''`),
-    "priority:high": and(isNotNull(persons.priority), lte(persons.priority, 3)),
-    "priority:medium": and(isNotNull(persons.priority), gte(persons.priority, 4), lte(persons.priority, 6)),
-    "priority:low": and(isNotNull(persons.priority), gte(persons.priority, 7)),
+    "priority:high": and(isNotNull(persons.priority), gte(persons.priority, 8)),
+    "priority:medium": and(isNotNull(persons.priority), gte(persons.priority, 4), lte(persons.priority, 7)),
+    "priority:low": and(isNotNull(persons.priority), lte(persons.priority, 3)),
     "contacted:recent": and(isNotNull(persons.lastContactedAt), gte(persons.lastContactedAt, sql`NOW() - INTERVAL '7 days'`)),
     "contacted:stale": or(isNull(persons.lastContactedAt), lte(persons.lastContactedAt, sql`NOW() - INTERVAL '7 days'`)),
   };
@@ -132,9 +132,9 @@ export default async function PersonsPage({
   if (groupFilter) sp.group = groupFilter.toString();
 
   const personFilterOptions = [
-    { label: "High priority (1-3)", value: "priority:high" },
-    { label: "Medium priority (4-6)", value: "priority:medium" },
-    { label: "Low priority (7-10)", value: "priority:low" },
+    { label: "High priority (8-10)", value: "priority:high" },
+    { label: "Medium priority (4-7)", value: "priority:medium" },
+    { label: "Low priority (1-3)", value: "priority:low" },
     { label: "Contacted recently", value: "contacted:recent" },
     { label: "Needs follow-up", value: "contacted:stale" },
     { label: "Has email", value: "has:email" },
@@ -307,7 +307,7 @@ export default async function PersonsPage({
 
 function PriorityBadge({ priority }: { priority: number | null }) {
   if (priority === null) return <span className="text-muted">-</span>;
-  if (priority <= 3) {
+  if (priority >= 8) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
@@ -315,7 +315,7 @@ function PriorityBadge({ priority }: { priority: number | null }) {
       </span>
     );
   }
-  if (priority <= 6) {
+  if (priority >= 4) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />

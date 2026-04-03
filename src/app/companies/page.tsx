@@ -45,9 +45,9 @@ export default async function CompaniesPage({
     "missing:industry": or(isNull(companies.industry), sql`${companies.industry} = ''`),
     "has:address": and(isNotNull(companies.address), not(sql`${companies.address} = ''`)),
     "missing:address": or(isNull(companies.address), sql`${companies.address} = ''`),
-    "priority:high": and(isNotNull(companies.priority), lte(companies.priority, 3)),
-    "priority:medium": and(isNotNull(companies.priority), gte(companies.priority, 4), lte(companies.priority, 6)),
-    "priority:low": and(isNotNull(companies.priority), gte(companies.priority, 7)),
+    "priority:high": and(isNotNull(companies.priority), gte(companies.priority, 8)),
+    "priority:medium": and(isNotNull(companies.priority), gte(companies.priority, 4), lte(companies.priority, 7)),
+    "priority:low": and(isNotNull(companies.priority), lte(companies.priority, 3)),
   };
   const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
 
@@ -93,9 +93,9 @@ export default async function CompaniesPage({
   if (sortOrder !== "asc") sp.order = sortOrder;
 
   const companyFilterOptions = [
-    { label: "High priority (1-3)", value: "priority:high" },
-    { label: "Medium priority (4-6)", value: "priority:medium" },
-    { label: "Low priority (7-10)", value: "priority:low" },
+    { label: "High priority (8-10)", value: "priority:high" },
+    { label: "Medium priority (4-7)", value: "priority:medium" },
+    { label: "Low priority (1-3)", value: "priority:low" },
     { label: "Has email", value: "has:email" },
     { label: "Missing email", value: "missing:email" },
     { label: "Has phone", value: "has:phone" },
@@ -189,7 +189,7 @@ export default async function CompaniesPage({
 
 function PriorityBadge({ priority }: { priority: number | null }) {
   if (priority === null) return <span className="text-muted">-</span>;
-  if (priority <= 3) {
+  if (priority >= 8) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
         <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
@@ -197,7 +197,7 @@ function PriorityBadge({ priority }: { priority: number | null }) {
       </span>
     );
   }
-  if (priority <= 6) {
+  if (priority >= 4) {
     return (
       <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
         <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
