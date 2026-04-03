@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { persons, companies, personGroups, groups } from "@/db/schema";
-import { desc, eq, asc, ilike, or, sql, count, isNull, isNotNull, and, not } from "drizzle-orm";
+import { desc, eq, asc, ilike, or, sql, count, isNull, isNotNull, and, not, lte, gte } from "drizzle-orm";
 import { deletePerson, markAsContacted } from "@/actions/persons";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
@@ -34,6 +34,8 @@ const sortColumns: Record<string, any> = {
   email: persons.email,
   position: persons.position,
   lastContacted: persons.lastContactedAt,
+  priority: persons.priority,
+  created: persons.createdAt,
 };
 
 export default async function PersonsPage({
@@ -71,6 +73,11 @@ export default async function PersonsPage({
     "missing:company": isNull(persons.companyId),
     "has:position": and(isNotNull(persons.position), not(sql`${persons.position} = ''`)),
     "missing:position": or(isNull(persons.position), sql`${persons.position} = ''`),
+    "priority:high": and(isNotNull(persons.priority), lte(persons.priority, 3)),
+    "priority:medium": and(isNotNull(persons.priority), gte(persons.priority, 4), lte(persons.priority, 6)),
+    "priority:low": and(isNotNull(persons.priority), gte(persons.priority, 7)),
+    "contacted:recent": and(isNotNull(persons.lastContactedAt), gte(persons.lastContactedAt, sql`NOW() - INTERVAL '7 days'`)),
+    "contacted:stale": or(isNull(persons.lastContactedAt), lte(persons.lastContactedAt, sql`NOW() - INTERVAL '7 days'`)),
   };
   const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
 
@@ -107,6 +114,7 @@ export default async function PersonsPage({
       position: persons.position,
       linkedin: persons.linkedin,
       lastContactedAt: persons.lastContactedAt,
+      priority: persons.priority,
       companyId: persons.companyId,
       companyName: companies.name,
     })
@@ -124,6 +132,11 @@ export default async function PersonsPage({
   if (groupFilter) sp.group = groupFilter.toString();
 
   const personFilterOptions = [
+    { label: "High priority (1-3)", value: "priority:high" },
+    { label: "Medium priority (4-6)", value: "priority:medium" },
+    { label: "Low priority (7-10)", value: "priority:low" },
+    { label: "Contacted recently", value: "contacted:recent" },
+    { label: "Needs follow-up", value: "contacted:stale" },
     { label: "Has email", value: "has:email" },
     { label: "Missing email", value: "missing:email" },
     { label: "Has phone", value: "has:phone" },
@@ -200,6 +213,9 @@ export default async function PersonsPage({
                   <th className="px-4 py-3 font-semibold">
                     <SortHeader label="Name" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
+                  <th className="px-4 py-3 font-semibold hidden md:table-cell">
+                    <SortHeader label="Priority" field="priority" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+                  </th>
                   <th className="px-4 py-3 font-semibold hidden xl:table-cell">
                     <SortHeader label="Position" field="position" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
@@ -232,6 +248,9 @@ export default async function PersonsPage({
                             <svg className="inline-block ml-1.5 text-[#0A66C2] opacity-50" width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-label="Has LinkedIn"><path d="M20.47 2H3.53A1.45 1.45 0 0 0 2 3.47v17.06A1.45 1.45 0 0 0 3.47 22h17.06A1.45 1.45 0 0 0 22 20.53V3.47A1.45 1.45 0 0 0 20.47 2ZM8.09 18.74h-3v-9h3v9ZM6.59 8.48a1.56 1.56 0 1 1 0-3.12 1.56 1.56 0 0 1 0 3.12Zm12.32 10.26h-3v-4.83c0-1.21-.43-2-1.52-2A1.65 1.65 0 0 0 12.85 13a2 2 0 0 0-.1.73v5h-3v-9h3v1.2a3 3 0 0 1 2.71-1.5c2 0 3.45 1.29 3.45 4.06v5.25Z"/></svg>
                           )}
                         </Link>
+                      </td>
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        <PriorityBadge priority={p.priority} />
                       </td>
                       <td className="px-4 py-3 text-muted hidden xl:table-cell">
                         <span className="truncate block max-w-[160px]">{p.position || "-"}</span>
@@ -283,5 +302,31 @@ export default async function PersonsPage({
 
       <Pagination total={total} page={page} baseUrl="/persons" searchParams={sp} />
     </div>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: number | null }) {
+  if (priority === null) return <span className="text-muted">-</span>;
+  if (priority <= 3) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        High
+      </span>
+    );
+  }
+  if (priority <= 6) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        Medium
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
+      <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+      Low
+    </span>
   );
 }

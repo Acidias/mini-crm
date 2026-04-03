@@ -1,11 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function SortHeader({
   label,
   field,
   currentSort,
   currentOrder,
-  searchParams,
+  searchParams: _sp,
 }: {
   label: string;
   field: string;
@@ -13,10 +16,12 @@ export default function SortHeader({
   currentOrder: string;
   searchParams?: Record<string, string>;
 }) {
+  const urlParams = useSearchParams();
   const isActive = currentSort === field;
   const nextOrder = isActive && currentOrder === "asc" ? "desc" : "asc";
 
-  const params = new URLSearchParams(searchParams || {});
+  // Preserve all current URL params (including multi-value filter params)
+  const params = new URLSearchParams(urlParams.toString());
   params.set("sort", field);
   params.set("order", nextOrder);
   params.delete("page");

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { companies, persons } from "@/db/schema";
-import { desc, eq, asc, ilike, or, count, sql, isNull, isNotNull, and, not } from "drizzle-orm";
+import { desc, eq, asc, ilike, or, count, sql, isNull, isNotNull, and, not, lte, gte } from "drizzle-orm";
 import { deleteCompany } from "@/actions/companies";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
@@ -45,6 +45,9 @@ export default async function CompaniesPage({
     "missing:industry": or(isNull(companies.industry), sql`${companies.industry} = ''`),
     "has:address": and(isNotNull(companies.address), not(sql`${companies.address} = ''`)),
     "missing:address": or(isNull(companies.address), sql`${companies.address} = ''`),
+    "priority:high": and(isNotNull(companies.priority), lte(companies.priority, 3)),
+    "priority:medium": and(isNotNull(companies.priority), gte(companies.priority, 4), lte(companies.priority, 6)),
+    "priority:low": and(isNotNull(companies.priority), gte(companies.priority, 7)),
   };
   const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
 
@@ -59,6 +62,8 @@ export default async function CompaniesPage({
     name: companies.name,
     industry: companies.industry,
     email: companies.email,
+    priority: companies.priority,
+    created: companies.createdAt,
   };
   const sortCol = sortColumns[sortField] || companies.name;
   const orderFn = sortOrder === "desc" ? desc : asc;
@@ -71,6 +76,7 @@ export default async function CompaniesPage({
       website: companies.website,
       email: companies.email,
       phone: companies.phone,
+      priority: companies.priority,
       personCount: count(persons.id),
     })
     .from(companies)
@@ -87,6 +93,9 @@ export default async function CompaniesPage({
   if (sortOrder !== "asc") sp.order = sortOrder;
 
   const companyFilterOptions = [
+    { label: "High priority (1-3)", value: "priority:high" },
+    { label: "Medium priority (4-6)", value: "priority:medium" },
+    { label: "Low priority (7-10)", value: "priority:low" },
     { label: "Has email", value: "has:email" },
     { label: "Missing email", value: "missing:email" },
     { label: "Has phone", value: "has:phone" },
@@ -131,9 +140,12 @@ export default async function CompaniesPage({
                     <SortHeader label="Company" field="name" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
                   <th className="px-5 py-3 font-medium">
+                    <SortHeader label="Priority" field="priority" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+                  </th>
+                  <th className="px-5 py-3 font-medium hidden lg:table-cell">
                     <SortHeader label="Industry" field="industry" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
                   </th>
-                  <th className="px-5 py-3 font-medium">Contact</th>
+                  <th className="px-5 py-3 font-medium hidden lg:table-cell">Contact</th>
                   <th className="px-5 py-3 font-medium">Persons</th>
                   <th className="px-5 py-3 font-medium text-right">Actions</th>
                 </tr>
@@ -146,8 +158,11 @@ export default async function CompaniesPage({
                       <Link href={`/companies/${c.id}`} className="text-accent hover:underline font-medium">{c.name}</Link>
                       {c.website && <p className="text-muted text-xs mt-0.5">{c.website}</p>}
                     </td>
-                    <td className="px-5 py-3 text-muted">{c.industry || "-"}</td>
-                    <td className="px-5 py-3 text-muted text-xs">
+                    <td className="px-5 py-3">
+                      <PriorityBadge priority={c.priority} />
+                    </td>
+                    <td className="px-5 py-3 text-muted hidden lg:table-cell">{c.industry || "-"}</td>
+                    <td className="px-5 py-3 text-muted text-xs hidden lg:table-cell">
                       {c.email && <p>{c.email}</p>}
                       {c.phone && <p>{c.phone}</p>}
                       {!c.email && !c.phone && "-"}
@@ -169,5 +184,31 @@ export default async function CompaniesPage({
 
       <Pagination total={total} page={page} baseUrl="/companies" searchParams={sp} />
     </div>
+  );
+}
+
+function PriorityBadge({ priority }: { priority: number | null }) {
+  if (priority === null) return <span className="text-muted">-</span>;
+  if (priority <= 3) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full">
+        <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+        High
+      </span>
+    );
+  }
+  if (priority <= 6) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full">
+        <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+        Medium
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-stone-500 bg-stone-100 px-2 py-0.5 rounded-full">
+      <span className="w-1.5 h-1.5 rounded-full bg-stone-400" />
+      Low
+    </span>
   );
 }

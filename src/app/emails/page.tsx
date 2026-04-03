@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { db } from "@/db";
 import { emails, persons } from "@/db/schema";
-import { desc, eq, ilike, or, count, asc, ne, and } from "drizzle-orm";
+import { desc, eq, ilike, or, count, asc, ne, and, isNull, isNotNull } from "drizzle-orm";
 import { deleteEmail } from "@/actions/emails";
 import SearchInput from "@/components/search-input";
 import Pagination, { PAGE_SIZE } from "@/components/pagination";
+import SortHeader from "@/components/sort-header";
 import ConfirmDelete from "@/components/confirm-delete";
+import FieldFilter from "@/components/field-filter";
 
 export const dynamic = "force-dynamic";
 
@@ -22,15 +24,26 @@ function timeAgo(date: Date): string {
   return `${months}mo ago`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const sortColumns: Record<string, any> = {
+  date: emails.createdAt,
+  subject: emails.subject,
+  from: emails.fromAddress,
+  to: emails.toAddress,
+};
+
 export default async function EmailsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string; tab?: string }>;
+  searchParams: Promise<{ q?: string; page?: string; tab?: string; sort?: string; order?: string; filter?: string | string[] }>;
 }) {
   const params = await searchParams;
   const query = params.q || "";
   const page = Math.max(1, parseInt(params.page || "1"));
   const tab = params.tab || "all";
+  const sortField = params.sort || "date";
+  const sortOrder = params.order || "desc";
+  const filters = Array.isArray(params.filter) ? params.filter : params.filter ? [params.filter] : [];
 
   const isDraftsTab = tab === "drafts";
 
@@ -47,9 +60,19 @@ export default async function EmailsPage({
       )
     : undefined;
 
-  const whereClause = searchFilter
-    ? and(tabFilter, searchFilter)
-    : tabFilter;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fieldMap: Record<string, any> = {
+    "direction:inbound": eq(emails.direction, "inbound"),
+    "direction:outbound": eq(emails.direction, "outbound"),
+    "read": eq(emails.read, true),
+    "unread": eq(emails.read, false),
+    "has:person": isNotNull(emails.personId),
+    "missing:person": isNull(emails.personId),
+  };
+  const fieldFilters = filters.map((f) => fieldMap[f]).filter(Boolean);
+
+  const conditions = [tabFilter, searchFilter, ...fieldFilters].filter(Boolean);
+  const whereClause = and(...conditions);
 
   const [totalResult] = await db.select({ value: count() }).from(emails).where(whereClause);
   const total = totalResult.value;
@@ -57,6 +80,9 @@ export default async function EmailsPage({
   // Count drafts for badge
   const [draftCountResult] = await db.select({ value: count() }).from(emails).where(eq(emails.status, "draft"));
   const draftCount = draftCountResult.value;
+
+  const sortCol = sortColumns[sortField] || emails.createdAt;
+  const orderFn = sortOrder === "desc" ? desc : asc;
 
   const allEmails = await db
     .select({
@@ -75,24 +101,38 @@ export default async function EmailsPage({
     .from(emails)
     .leftJoin(persons, eq(emails.personId, persons.id))
     .where(whereClause)
-    .orderBy(desc(isDraftsTab ? emails.updatedAt : emails.createdAt))
+    .orderBy(orderFn(isDraftsTab ? emails.updatedAt : sortCol))
     .limit(PAGE_SIZE)
     .offset((page - 1) * PAGE_SIZE);
 
   const sp: Record<string, string> = {};
   if (query) sp.q = query;
   if (isDraftsTab) sp.tab = "drafts";
+  if (sortField !== "date") sp.sort = sortField;
+  if (sortOrder !== "desc") sp.order = sortOrder;
+
+  const emailFilterOptions = isDraftsTab
+    ? []
+    : [
+        { label: "Inbound", value: "direction:inbound" },
+        { label: "Outbound", value: "direction:outbound" },
+        { label: "Read", value: "read" },
+        { label: "Unread", value: "unread" },
+        { label: "Linked to person", value: "has:person" },
+        { label: "No person", value: "missing:person" },
+      ];
 
   return (
     <div className="max-w-5xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold">Emails</h1>
-          <p className="text-muted text-sm mt-1">{total} {isDraftsTab ? "drafts" : "emails"}</p>
+          <h1 className="text-2xl font-bold tracking-tight">Emails</h1>
+          <p className="text-muted text-sm mt-0.5">{total} {isDraftsTab ? "draft" : "email"}{total !== 1 ? "s" : ""}</p>
         </div>
-        <div className="flex gap-3 items-center">
+        <div className="flex gap-2 items-center">
           <SearchInput placeholder="Search emails..." />
-          <Link href="/emails/compose" className="bg-accent text-white px-4 py-2 rounded-lg text-sm hover:bg-accent-hover transition-colors">
+          {emailFilterOptions.length > 0 && <FieldFilter options={emailFilterOptions} />}
+          <Link href="/emails/compose" className="bg-accent text-white px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-accent-hover transition-colors shadow-sm">
             Compose
           </Link>
         </div>
@@ -128,8 +168,11 @@ export default async function EmailsPage({
       </div>
 
       {total === 0 ? (
-        <div className="bg-card-bg rounded-xl border border-border/60 p-12 shadow-sm text-center">
-          <p className="text-muted mb-3">
+        <div className="bg-card-bg rounded-xl border border-border/60 p-16 shadow-sm text-center">
+          <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-stone-400"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+          <p className="text-muted mb-1 font-medium">
             {query
               ? "No emails match your search."
               : isDraftsTab
@@ -144,6 +187,22 @@ export default async function EmailsPage({
         </div>
       ) : (
         <div className="bg-card-bg rounded-xl border border-border/60 shadow-sm overflow-hidden">
+          {!isDraftsTab && (
+            <div className="text-left text-[11px] uppercase tracking-wider text-muted/80 border-b border-border/60 flex px-4 py-2.5">
+              <div className="w-12 flex-shrink-0"></div>
+              <div className="flex-1 min-w-0 flex gap-4">
+                <span className="font-semibold w-48 flex-shrink-0">
+                  <SortHeader label="From / To" field="from" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+                </span>
+                <span className="font-semibold flex-1">
+                  <SortHeader label="Subject" field="subject" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+                </span>
+              </div>
+              <div className="w-28 flex-shrink-0 text-right font-semibold">
+                <SortHeader label="Date" field="date" currentSort={sortField} currentOrder={sortOrder} searchParams={sp} />
+              </div>
+            </div>
+          )}
           {allEmails.map((e) => {
             const isInbound = e.direction === "inbound";
             const isDraft = e.status === "draft";
@@ -151,7 +210,7 @@ export default async function EmailsPage({
             return (
               <div
                 key={e.id}
-                className={`flex items-center gap-4 px-5 py-3 border-b border-border last:border-0 hover:bg-stone-50/50 ${isUnread ? "bg-teal-50/30" : ""}`}
+                className={`flex items-center gap-4 px-4 py-3 border-b border-border/40 last:border-0 hover:bg-stone-50/60 group ${isUnread ? "bg-teal-50/30" : ""}`}
               >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${
                   isDraft
@@ -183,11 +242,13 @@ export default async function EmailsPage({
                 <div className="flex items-center gap-3 flex-shrink-0">
                   <span className="text-xs text-muted">{timeAgo(isDraft && e.updatedAt ? e.updatedAt : e.createdAt)}</span>
                   {isDraft && (
-                    <Link href={`/emails/compose?draft=${e.id}`} className="text-accent text-xs hover:underline">
+                    <Link href={`/emails/compose?draft=${e.id}`} className="text-accent text-xs hover:underline opacity-0 group-hover:opacity-100 transition-opacity">
                       Edit
                     </Link>
                   )}
-                  <ConfirmDelete action={deleteEmail.bind(null, e.id)} />
+                  <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ConfirmDelete action={deleteEmail.bind(null, e.id)} />
+                  </span>
                 </div>
               </div>
             );
